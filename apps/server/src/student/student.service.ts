@@ -1,47 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import {
-  MockStudentCourseRepository,
-  MockStudentGroupRepository,
-  MockSwapRequestRepository,
-  MockCourseRepository,
-  MockGroupRepository,
-} from '../repositories';
-import { SwapRequestStatus } from '@repo/types';
+import { CreateStudentDto } from './dto/create-student.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
 
 @Injectable()
 export class StudentService {
-  constructor(
-    private readonly studentCourseRepo: MockStudentCourseRepository,
-    private readonly studentGroupRepo: MockStudentGroupRepository,
-    private readonly swapRequestRepo: MockSwapRequestRepository,
-    private readonly courseRepo: MockCourseRepository,
-    private readonly groupRepo: MockGroupRepository,
-  ) {}
-
-  async getMyCourses(studentId: string) {
-    const enrollments = await this.studentCourseRepo.findByStudent(studentId);
-    const groups = await this.studentGroupRepo.findByStudent(studentId);
-    const requests = await this.swapRequestRepo.findByStudent(studentId);
-
-    return Promise.all(
-      enrollments.map(async (enrollment) => {
-        const course = await this.courseRepo.findById(enrollment.courseId);
-        return {
-          ...enrollment,
-          course,
-          groups: groups.filter((g) => g.studentId === studentId),
-          activeRequest:
-            requests.find(
-              (r) =>
-                r.courseId === enrollment.courseId &&
-                r.status === SwapRequestStatus.PENDING,
-            ) ?? null,
-        };
-      }),
-    );
+  create(createStudentDto: CreateStudentDto) {
+    return 'This action adds a new student';
   }
 
-  async getMyRequests(studentId: string) {
-    return this.swapRequestRepo.findByStudent(studentId);
+  findAll() {
+    return `This action returns all student`;
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} student`;
+  }
+
+  update(id: number, updateStudentDto: UpdateStudentDto) {
+    return `This action updates a #${id} student`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} student`;
   }
 }

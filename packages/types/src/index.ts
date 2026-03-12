@@ -18,16 +18,10 @@ export interface StudyMajor {
   year: number;
 }
 
-export enum SessionKind {
+export enum ActivityTypeKind {
   LECTURE = "LECTURE",
   LAB = "LAB",
   EXERCISE = "EXERCISE",
-}
-
-export enum SwapMode {
-  MANUAL = "MANUAL",
-  SEMI_AUTO = "SEMI_AUTO",
-  AUTO = "AUTO",
 }
 
 export interface Group {
@@ -39,18 +33,16 @@ export interface Group {
   activityTypeId: string;
 }
 
-export interface SessionType {
+export interface ActivityType {
   id: string;
   courseId: string;
-  type: SessionKind;
+  type: ActivityTypeKind;
 }
 
 export interface Course {
   id: string;
   title: string;
-  professorId?: string;
   studyMajorId: string;
-  swapMode?: SwapMode;
 }
 
 export enum StudentGroupStatus {

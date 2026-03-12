@@ -1,12 +1,7 @@
-import crypto from 'crypto';
+import { randomUUID } from 'crypto';
 import { BaseRepository, FindManyArgs } from '../base.repository';
 import { SwapRequest, SwapRequestStatus } from '@repo/types';
 import { mockSwapRequests } from './data/mock-swap-requests.data';
-
-type CreateSwapRequestInput = Omit<
-  SwapRequest,
-  'id' | 'createdAt' | 'updatedAt'
->;
 
 export class MockSwapRequestRepository extends BaseRepository<SwapRequest> {
   private store: SwapRequest[] = [...mockSwapRequests];
@@ -23,15 +18,16 @@ export class MockSwapRequestRepository extends BaseRepository<SwapRequest> {
     );
   }
 
-  async create(data: CreateSwapRequestInput): Promise<SwapRequest> {
-    const newRequest: SwapRequest = {
+  async create(data: SwapRequest): Promise<SwapRequest> {
+    const now = new Date();
+    const entity: SwapRequest = {
       ...data,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: data.id ?? randomUUID(),
+      createdAt: data.createdAt ?? now,
+      updatedAt: data.updatedAt ?? now,
     };
-    this.store.push(newRequest);
-    return newRequest;
+    this.store.push(entity);
+    return entity;
   }
 
   async update(id: string, data: Partial<SwapRequest>): Promise<SwapRequest> {

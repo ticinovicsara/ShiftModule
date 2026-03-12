@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { BaseRepository, FindManyArgs } from '../base.repository';
 import { Course } from '@repo/types';
 import { mockCourses } from './data/mock-courses.data';
-import { mockSessionTypes } from './data/mock-session-types.data';
+import { mockActivityTypes } from './data/mock-activity-types.data';
 
 export class MockCourseRepository extends BaseRepository<Course> {
   private store: Course[] = [...mockCourses];
@@ -19,8 +19,8 @@ export class MockCourseRepository extends BaseRepository<Course> {
     );
   }
 
-  async create(data: Omit<Course, 'id'>): Promise<Course> {
-    const entity: Course = { ...data, id: randomUUID() };
+  async create(data: Course): Promise<Course> {
+    const entity: Course = { ...data, id: data.id ?? randomUUID() };
     this.store.push(entity);
     return entity;
   }
@@ -44,12 +44,14 @@ export class MockCourseRepository extends BaseRepository<Course> {
     return this.store.filter((c) => c.studyMajorId === majorId);
   }
 
-  async findWithSessionTypes(id: string): Promise<Course | null> {
+  async findWithActivityTypes(id: string): Promise<Course | null> {
     const course = await this.findById(id);
     if (!course) return null;
-    const activityTypes = mockSessionTypes.filter(
+    // In-memory composition; caller can separately query activity types
+    const activityTypes = mockActivityTypes.filter(
       (at) => at.courseId === course.id,
     );
     return { ...course, activityTypes } as any;
   }
 }
+

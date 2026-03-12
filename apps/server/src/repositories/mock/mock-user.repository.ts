@@ -18,13 +18,10 @@ export class MockUserRepository extends BaseRepository<User> {
     );
   }
 
-  async create(data: Omit<User, 'id'>): Promise<User> {
-    const newUser: User = {
-      ...data,
-      id: crypto.randomUUID(),
-    };
-    this.store.push(newUser);
-    return newUser;
+  async create(data: User): Promise<User> {
+    const entity: User = { ...data, id: data.id ?? randomUUID() };
+    this.store.push(entity);
+    return entity;
   }
 
   async update(id: string, data: Partial<User>): Promise<User> {
@@ -54,3 +51,4 @@ export class MockUserRepository extends BaseRepository<User> {
     return this.store.filter((u) => u.role === role);
   }
 }
+

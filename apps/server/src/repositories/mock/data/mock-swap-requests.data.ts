@@ -1,6 +1,10 @@
-import { SwapRequest, SwapRequestStatus } from '@repo/types';
+import {
+  SwapRequest,
+  SwapRequestStatus,
+} from '@repo/types';
 import { mockStudentGroups } from './mock-student-groups.data';
 
+// Two sample pending swap requests: student 1 wants LAB1 -> LAB2, student 2 LAB2 -> LAB1
 const sg1 = mockStudentGroups[0];
 const sg2 = mockStudentGroups[1];
 
@@ -40,3 +44,4 @@ export const mockSwapRequests: SwapRequest[] = [
     updatedAt: new Date('2024-10-24T10:05:00Z'),
   },
 ];
+
