@@ -18,8 +18,8 @@ export class MockGroupRepository extends BaseRepository<Group> {
     );
   }
 
-  async create(data: Group): Promise<Group> {
-    const entity: Group = { ...data, id: data.id ?? randomUUID() };
+  async create(data: Omit<Group, 'id'>): Promise<Group> {
+    const entity: Group = { ...data, id: randomUUID() };
     this.store.push(entity);
     return entity;
   }
