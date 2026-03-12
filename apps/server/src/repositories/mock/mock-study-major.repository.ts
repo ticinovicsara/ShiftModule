@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { BaseRepository, FindManyArgs } from '../base.repository';
-import { StudyMajor } from '@repo/types';
+import { StudyMajor, User } from '@repo/types';
 import { mockStudyMajors } from './data/mock-study-majors.data';
 
 export class MockStudyMajorRepository extends BaseRepository<StudyMajor> {
@@ -18,8 +18,8 @@ export class MockStudyMajorRepository extends BaseRepository<StudyMajor> {
     );
   }
 
-  async create(data: StudyMajor): Promise<StudyMajor> {
-    const entity: StudyMajor = { ...data, id: data.id ?? randomUUID() };
+  async create(data: Omit<StudyMajor, 'id'>): Promise<StudyMajor> {
+    const entity: StudyMajor = { ...data, id: crypto.randomUUID() };
     this.store.push(entity);
     return entity;
   }
@@ -39,4 +39,3 @@ export class MockStudyMajorRepository extends BaseRepository<StudyMajor> {
     return removed;
   }
 }
-
