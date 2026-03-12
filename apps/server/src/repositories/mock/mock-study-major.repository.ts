@@ -1,0 +1,42 @@
+import { randomUUID } from 'crypto';
+import { BaseRepository, FindManyArgs } from '../base.repository';
+import { StudyMajor } from '@repo/types';
+import { mockStudyMajors } from './data/mock-study-majors.data';
+
+export class MockStudyMajorRepository extends BaseRepository<StudyMajor> {
+  private store: StudyMajor[] = [...mockStudyMajors];
+
+  async findById(id: string): Promise<StudyMajor | null> {
+    return this.store.find((m) => m.id === id) ?? null;
+  }
+
+  async findMany(args?: FindManyArgs<StudyMajor>): Promise<StudyMajor[]> {
+    if (!args?.where) return [...this.store];
+    const { where } = args;
+    return this.store.filter((m) =>
+      Object.entries(where).every(([key, value]) => (m as any)[key] === value),
+    );
+  }
+
+  async create(data: StudyMajor): Promise<StudyMajor> {
+    const entity: StudyMajor = { ...data, id: data.id ?? randomUUID() };
+    this.store.push(entity);
+    return entity;
+  }
+
+  async update(id: string, data: Partial<StudyMajor>): Promise<StudyMajor> {
+    const index = this.store.findIndex((m) => m.id === id);
+    if (index === -1) throw new Error(`StudyMajor with id ${id} not found`);
+    const updated = { ...this.store[index], ...data };
+    this.store[index] = updated;
+    return updated;
+  }
+
+  async delete(id: string): Promise<StudyMajor> {
+    const index = this.store.findIndex((m) => m.id === id);
+    if (index === -1) throw new Error(`StudyMajor with id ${id} not found`);
+    const [removed] = this.store.splice(index, 1);
+    return removed;
+  }
+}
+
