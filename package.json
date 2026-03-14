@@ -1,5 +1,5 @@
 {
-  "name": "ShiftModule",
+  "name": "shiftmodule",
   "private": true,
   "scripts": {
     "build": "turbo run build",
