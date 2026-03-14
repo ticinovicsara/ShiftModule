@@ -7,7 +7,7 @@ export const mockGroups: Group[] = [
     capacity: 200,
     currentCount: 0,
     isActive: true,
-    activityTypeId: 'activity-osnove-lecture-1',
+    sessionTypeId: 'activity-osnove-lecture-1',
   },
   ...Array.from({ length: 5 }).map((_, index) => {
     const i = index + 1;
@@ -17,8 +17,7 @@ export const mockGroups: Group[] = [
       capacity: 20,
       currentCount: 0,
       isActive: true,
-      activityTypeId: 'activity-osnove-lab-1',
+      sessionTypeId: 'activity-osnove-lab-1',
     } satisfies Group;
   }),
 ];
-

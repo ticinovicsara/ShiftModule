@@ -22,12 +22,17 @@ export class GroupService {
     return group;
   }
 
-  async findByActivityType(activityTypeId: string) {
-    return this.groupRepo.findByActivityType(activityTypeId);
+  async findBySessionType(sessionTypeId: string) {
+    return this.groupRepo.findBySessionType(sessionTypeId);
   }
 
   async create(dto: CreateGroupDto) {
-    return this.groupRepo.create({ ...dto, currentCount: 0, isActive: true });
+    return this.groupRepo.create({
+      ...dto,
+      currentCount: 0,
+      isActive: true,
+      sessionTypeId: dto.sessionTypeId,
+    });
   }
 
   async update(id: string, dto: UpdateGroupDto) {

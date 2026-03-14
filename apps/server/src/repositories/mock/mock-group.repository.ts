@@ -39,8 +39,8 @@ export class MockGroupRepository extends BaseRepository<Group> {
     return removed;
   }
 
-  async findByActivityType(activityTypeId: string): Promise<Group[]> {
-    return this.store.filter((g) => g.activityTypeId === activityTypeId);
+  async findBySessionType(sessionTypeId: string): Promise<Group[]> {
+    return this.store.filter((g) => g.sessionTypeId === sessionTypeId);
   }
 
   async incrementCount(id: string): Promise<Group> {
