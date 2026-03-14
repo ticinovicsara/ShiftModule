@@ -7,7 +7,7 @@ import { AuthGuard } from './auth.guard';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, MockUserRepository],
+  providers: [AuthService, AuthGuard, RolesGuard, MockUserRepository],
   exports: [AuthGuard, RolesGuard],
 })
 export class AuthModule {}
