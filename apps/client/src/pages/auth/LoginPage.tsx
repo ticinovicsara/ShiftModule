@@ -35,8 +35,13 @@ export function LoginPage() {
   };
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-      <h1 className="text-2xl font-bold text-slate-900">{LABELS.auth.title}</h1>
+    <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+      <h1 className="text-2xl font-bold text-slate-900 text-center">
+        {LABELS.auth.title}
+      </h1>
+      <p className="text-md text-slate-500 text-center">
+        {LABELS.auth.subtitle}
+      </p>
       <Input
         label={LABELS.auth.email}
         leadingIcon={<span>@</span>}

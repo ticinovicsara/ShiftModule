@@ -22,6 +22,7 @@ export const LABELS = {
   },
   auth: {
     title: "Prijava",
+    subtitle: "Modul za promjenu grupa",
     email: "E-mail",
     password: "Lozinka",
     signIn: "Prijavi se",
