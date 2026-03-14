@@ -22,9 +22,9 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
-  "references": [
+  "paths": [
     {
-      "@repo/types": "../../packages/types/src/index.ts"
+      "@repo/types": ["../../packages/types/src/index.ts"]
     }
   ],
   "include": ["src"]
