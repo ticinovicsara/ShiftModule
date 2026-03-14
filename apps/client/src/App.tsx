@@ -1,7 +1,7 @@
-import { DesignSystemPreview } from "./components/shared/DesignSystemPreview";
+import { AppRouter } from "./routes/AppRouter";
 
 function App() {
-  return <DesignSystemPreview />;
+  return <AppRouter />;
 }
 
 export default App;
