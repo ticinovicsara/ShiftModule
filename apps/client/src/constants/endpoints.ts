@@ -20,6 +20,9 @@ export const API_ENDPOINTS = {
     sessionTypeById: (id: string) => `/admin/session-types/${id}`,
     sessionTypesByCourse: (courseId: string) =>
       `/admin/session-types/course/${courseId}`,
+    swapRequests: "/swap-request/admin/requests",
+    swapRequestsByCourse: (courseId: string) =>
+      `/swap-request/admin/requests?courseId=${courseId}`,
   },
   professor: {
     courses: "/professor/courses",
