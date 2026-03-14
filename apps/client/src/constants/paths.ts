@@ -21,6 +21,7 @@ export const ROUTE_PATHS = {
   confirmSwap: (requestId: string) => `/confirm-swap/${requestId}`,
   admin: {
     dashboard: "/admin/dashboard",
+    settings: "/admin/settings",
     students: "/admin/students",
     studentsImport: "/admin/students/import",
     courses: "/admin/courses",
@@ -31,6 +32,7 @@ export const ROUTE_PATHS = {
   },
   professor: {
     dashboard: "/professor/dashboard",
+    settings: "/professor/settings",
     courses: "/professor/courses",
     courseDetail: (id: string) => `/professor/courses/${id}`,
     courseRequests: (id: string) => `/professor/courses/${id}/requests`,
@@ -41,6 +43,7 @@ export const ROUTE_PATHS = {
   },
   student: {
     courses: "/student/courses",
+    settings: "/student/settings",
     courseDetail: (id: string) => `/student/courses/${id}`,
     swapStep1: (id: string) => `/student/courses/${id}/swap/step-1`,
     swapStep2: (id: string) => `/student/courses/${id}/swap/step-2`,

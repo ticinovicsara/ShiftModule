@@ -1,27 +1,30 @@
 import { UserRole } from "@repo/types";
-import { Navigate, Route, Routes } from "react-router-dom";
-import { AuthLayout } from "../layouts/AuthLayout";
-import { AppLayout } from "../layouts/AppLayout";
-import { AdminCourseDetailPage } from "../pages/admin/AdminCourseDetailPage";
-import { AdminCoursesPage } from "../pages/admin/AdminCoursesPage";
-import { AdminDashboardPage } from "../pages/admin/AdminDashboardPage";
-import { AdminImportPage } from "../pages/admin/AdminImportPage";
-import { AdminStudentsPage } from "../pages/admin/AdminStudentsPage";
-import { LoginPage } from "../pages/auth/LoginPage";
-import { ProfessorAutoLogPage } from "../pages/professor/ProfessorAutoLogPage";
-import { ProfessorCourseDetailPage } from "../pages/professor/ProfessorCourseDetailPage";
-import { ProfessorCoursesPage } from "../pages/professor/ProfessorCoursesPage";
-import { ProfessorRequestDetailPage } from "../pages/professor/ProfessorRequestDetailPage";
-import { NotFoundPage } from "../pages/shared/NotFoundPage";
-import { UnauthorizedPage } from "../pages/shared/UnauthorizedPage";
-import { StudentCourseDetailPage } from "../pages/student/StudentCourseDetailPage";
-import { StudentCoursesPage } from "../pages/student/StudentCoursesPage";
-import { StudentRequestsPage } from "../pages/student/StudentRequestsPage";
-import { StudentSwapStep1Page } from "../pages/student/StudentSwapStep1Page";
-import { StudentSwapStep2Page } from "../pages/student/StudentSwapStep2Page";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ROUTE_PATHS } from "../constants";
+import { AppLayout } from "../layouts/AppLayout";
+import { AuthLayout } from "../layouts/AuthLayout";
+import {
+  LoginPage,
+  AdminDashboardPage,
+  AdminStudentsPage,
+  AdminImportPage,
+  AdminCoursesPage,
+  AdminCourseDetailPage,
+  ProfessorCoursesPage,
+  ProfessorCourseDetailPage,
+  ProfessorRequestDetailPage,
+  ProfessorAutoLogPage,
+  StudentCoursesPage,
+  StudentCourseDetailPage,
+  StudentSwapStep1Page,
+  StudentSwapStep2Page,
+  StudentRequestsPage,
+  ConfirmSwapPage,
+  UnauthorizedPage,
+  NotFoundPage,
+} from "../pages";
+import { SettingsPage } from "../pages/shared/SettingsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { ConfirmSwapPage } from "../pages/shared/ConfirmSwapPage";
 
 export function AppRouter() {
   return (
@@ -64,6 +67,7 @@ export function AppRouter() {
             path={ROUTE_PATHS.routePatterns.adminAutoAssign}
             element={<AdminCourseDetailPage />}
           />
+          <Route path={ROUTE_PATHS.admin.settings} element={<SettingsPage />} />
         </Route>
       </Route>
 
@@ -97,6 +101,10 @@ export function AppRouter() {
             path={ROUTE_PATHS.routePatterns.professorAutoLog}
             element={<ProfessorAutoLogPage />}
           />
+          <Route
+            path={ROUTE_PATHS.professor.settings}
+            element={<SettingsPage />}
+          />
         </Route>
       </Route>
 
@@ -125,6 +133,10 @@ export function AppRouter() {
           <Route
             path={ROUTE_PATHS.routePatterns.studentRequestDetail}
             element={<StudentRequestsPage />}
+          />
+          <Route
+            path={ROUTE_PATHS.student.settings}
+            element={<SettingsPage />}
           />
         </Route>
       </Route>

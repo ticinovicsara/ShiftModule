@@ -43,7 +43,16 @@ export const NAVIGATION_CONFIG: Record<
         path: ROUTE_PATHS.admin.groups,
         icon: "groups",
       },
-      { label: LABELS.nav.settings, path: unresolvedPath, icon: "settings" },
+      {
+        label: "Swap potvrda",
+        path: ROUTE_PATHS.confirmSwap("test"),
+        icon: "requests",
+      },
+      {
+        label: LABELS.nav.settings,
+        path: ROUTE_PATHS.admin.settings,
+        icon: "settings",
+      },
     ],
     desktop: [
       {
@@ -67,7 +76,16 @@ export const NAVIGATION_CONFIG: Record<
         path: ROUTE_PATHS.admin.studyMajors,
         icon: "study-majors",
       },
-      { label: LABELS.nav.settings, path: unresolvedPath, icon: "settings" },
+      {
+        label: "Swap potvrda",
+        path: ROUTE_PATHS.confirmSwap("test"),
+        icon: "requests",
+      },
+      {
+        label: LABELS.nav.settings,
+        path: ROUTE_PATHS.admin.settings,
+        icon: "settings",
+      },
     ],
   },
   [UserRole.PROFESSOR]: {
@@ -101,7 +119,11 @@ export const NAVIGATION_CONFIG: Record<
       { label: LABELS.nav.students, path: unresolvedPath, icon: "students" },
       { label: LABELS.nav.schedule, path: unresolvedPath, icon: "schedule" },
       { label: LABELS.nav.reports, path: unresolvedPath, icon: "reports" },
-      { label: LABELS.nav.settings, path: unresolvedPath, icon: "settings" },
+      {
+        label: LABELS.nav.settings,
+        path: ROUTE_PATHS.professor.settings,
+        icon: "settings",
+      },
     ],
   },
   [UserRole.STUDENT]: {
