@@ -1,9 +1,3 @@
-import { SwapMode } from '@repo/types';
-import { CreateCourseDto } from './create-course.dto';
+import type { UpdateCourseDto as SharedUpdateCourseDto } from '@repo/types';
 
-export class UpdateCourseDto implements Partial<CreateCourseDto> {
-  title?: string;
-  studyMajorId?: string;
-  professorId?: string;
-  swapMode?: SwapMode;
-}
+export type UpdateCourseDto = SharedUpdateCourseDto;

@@ -1,9 +1,3 @@
-export class CreateSwapRequestDto {
-  courseId: string;
-  activityTypeId: string;
-  currentGroupId: string;
-  desiredGroupId: string;
-  secondChoiceGroupId?: string;
-  reason?: string;
-  partnerEmail?: string;
-}
+import type { CreateSwapRequestDto as SharedCreateSwapRequestDto } from '@repo/types';
+
+export type CreateSwapRequestDto = SharedCreateSwapRequestDto;

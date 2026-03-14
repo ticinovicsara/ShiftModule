@@ -1,8 +1,3 @@
-import { UserRole } from '@repo/types';
+import type { CreateUserDto as SharedCreateUserDto } from '@repo/types';
 
-export class CreateUserDto {
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: UserRole;
-}
+export type CreateUserDto = SharedCreateUserDto;

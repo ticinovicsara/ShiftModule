@@ -1,3 +1,3 @@
-export class RejectSwapRequestDto {
-  reason?: string;
-}
+import type { RejectSwapRequestDto as SharedRejectSwapRequestDto } from '@repo/types';
+
+export type RejectSwapRequestDto = SharedRejectSwapRequestDto;

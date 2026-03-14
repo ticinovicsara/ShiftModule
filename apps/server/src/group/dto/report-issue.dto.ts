@@ -1,4 +1,3 @@
-export class ReportIssueDto {
-  reason: 'BROKEN_EQUIPMENT' | 'MISSING_EQUIPMENT' | 'OTHER';
-  description?: string;
-}
+import type { ReportIssueDto as SharedReportIssueDto } from '@repo/types';
+
+export type ReportIssueDto = SharedReportIssueDto;

@@ -1,6 +1,3 @@
-import { CreateStudyMajorDto } from './create-study-major.dto';
+import type { UpdateStudyMajorDto as SharedUpdateStudyMajorDto } from '@repo/types';
 
-export class UpdateStudyMajorDto implements Partial<CreateStudyMajorDto> {
-  title?: string;
-  year?: number;
-}
+export type UpdateStudyMajorDto = SharedUpdateStudyMajorDto;

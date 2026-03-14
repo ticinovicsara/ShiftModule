@@ -1,5 +1,3 @@
-import { SessionKind } from '@repo/types';
+import type { UpdateSessionTypeDto as SharedUpdateSessionTypeDto } from '@repo/types';
 
-export class UpdateSessionTypeDto {
-  type?: SessionKind;
-}
+export type UpdateSessionTypeDto = SharedUpdateSessionTypeDto;

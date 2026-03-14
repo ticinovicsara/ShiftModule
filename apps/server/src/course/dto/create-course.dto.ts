@@ -1,4 +1,3 @@
-export class CreateCourseDto {
-  title: string;
-  studyMajorId: string;
-}
+import type { CreateCourseDto as SharedCreateCourseDto } from '@repo/types';
+
+export type CreateCourseDto = SharedCreateCourseDto;

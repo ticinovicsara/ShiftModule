@@ -1,6 +1,3 @@
-import { SessionKind } from '@repo/types';
+import type { CreateSessionTypeDto as SharedCreateSessionTypeDto } from '@repo/types';
 
-export class CreateSessionTypeDto {
-  courseId: string;
-  type: SessionKind;
-}
+export type CreateSessionTypeDto = SharedCreateSessionTypeDto;

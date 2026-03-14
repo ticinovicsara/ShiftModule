@@ -1,7 +1,3 @@
-import { CreateUserDto } from './create-user.dto';
+import type { UpdateUserDto as SharedUpdateUserDto } from '@repo/types';
 
-export class UpdateUserDto implements Partial<CreateUserDto> {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-}
+export type UpdateUserDto = SharedUpdateUserDto;

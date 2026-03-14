@@ -1,5 +1,3 @@
-export class CreateGroupDto {
-  name: string;
-  capacity: number;
-  activityTypeId: string;
-}
+import type { CreateGroupDto as SharedCreateGroupDto } from '@repo/types';
+
+export type CreateGroupDto = SharedCreateGroupDto;
