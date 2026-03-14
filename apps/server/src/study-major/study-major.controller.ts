@@ -9,8 +9,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { StudyMajorService } from './study-major.service';
-import { CreateStudyMajorDto } from './dto/create-study-major.dto';
-import { UpdateStudyMajorDto } from './dto/update-study-major.dto';
+import type { CreateStudyMajorDto } from './dto/create-study-major.dto';
+import type { UpdateStudyMajorDto } from './dto/update-study-major.dto';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
 
 @Controller('admin/study-majors')

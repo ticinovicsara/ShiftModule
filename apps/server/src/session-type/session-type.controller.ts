@@ -9,8 +9,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SessionTypeService } from './session-type.service';
-import { CreateSessionTypeDto } from './dto/create-session-type.dto';
-import { UpdateSessionTypeDto } from './dto/update-session-type.dto';
+import type { CreateSessionTypeDto } from './dto/create-session-type.dto';
+import type { UpdateSessionTypeDto } from './dto/update-session-type.dto';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
 
 @Controller('admin/session-types')

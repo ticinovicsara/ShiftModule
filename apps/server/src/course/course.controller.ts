@@ -9,10 +9,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CourseService } from './course.service';
-import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto } from './dto/update-course.dto';
+import type { CreateCourseDto } from './dto/create-course.dto';
+import type { UpdateCourseDto } from './dto/update-course.dto';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
-import { SwapMode } from '@repo/types';
+import type { SwapMode } from '@repo/types';
 
 @Controller()
 @UseGuards(AuthGuard, RolesGuard)

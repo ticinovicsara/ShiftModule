@@ -9,9 +9,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { GroupService } from './group.service';
-import { CreateGroupDto } from './dto/create-group.dto';
-import { UpdateGroupDto } from './dto/update-group.dto';
-import { ReportIssueDto } from './dto/report-issue.dto';
+import type { CreateGroupDto } from './dto/create-group.dto';
+import type { UpdateGroupDto } from './dto/update-group.dto';
+import type { ReportIssueDto } from './dto/report-issue.dto';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
 
 @Controller()

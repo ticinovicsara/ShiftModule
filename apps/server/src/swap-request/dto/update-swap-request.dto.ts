@@ -1,4 +1,3 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateSwapRequestDto } from './create-swap-request.dto';
+import type { CreateSwapRequestDto } from './create-swap-request.dto';
 
-export class UpdateSwapRequestDto extends PartialType(CreateSwapRequestDto) {}
+export type UpdateSwapRequestDto = Partial<CreateSwapRequestDto>;
