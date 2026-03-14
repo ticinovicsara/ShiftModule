@@ -39,3 +39,6 @@ yarn-error.log*
 *.pem
 
 apps/server/.env
+
+*.md
+!README.md
