@@ -1,0 +1,19 @@
+{
+  "rootDir": "../",
+  "roots": ["<rootDir>/test"],
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "testEnvironment": "node",
+  "testMatch": ["<rootDir>/test/**/*.e2e-spec.ts"],
+  "modulePaths": ["<rootDir>"],
+  "moduleNameMapper": {
+    "^@repo/types$": "<rootDir>/../../packages/types/src/index.ts"
+  },
+  "transform": {
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "tsconfig": "<rootDir>/test/tsconfig.json"
+      }
+    ]
+  }
+}

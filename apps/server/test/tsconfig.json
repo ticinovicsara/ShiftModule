@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.e2e.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": "../",
+    "types": ["jest", "node"]
+  },
+  "include": ["./**/*.ts", "../src/**/*.ts"]
+}
