@@ -1,4 +1,9 @@
-import type { LoginRequestDto, LoginResponseData, User } from "@repo/types";
+import type {
+  LoginRequestDto,
+  LoginResponseData,
+  User,
+  UserRole,
+} from "@repo/types";
 import {
   createContext,
   useCallback,
