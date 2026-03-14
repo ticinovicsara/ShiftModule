@@ -1,7 +1,7 @@
 import type { Course, SwapRequest } from "@repo/types";
 import type { CreateSwapRequestDto } from "../types";
 import { client } from "./client";
-import { API_ENDPOINTS } from "./endpoints";
+import { API_ENDPOINTS } from "../constants";
 
 export const studentApi = {
   getCourses: () => client.get<Course[]>(API_ENDPOINTS.student.courses),
