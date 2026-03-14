@@ -1,5 +1,5 @@
 import { client } from "./client";
-import { API_ENDPOINTS } from "./endpoints";
+import { API_ENDPOINTS } from "../constants";
 import type { LoginRequestDto, LoginResponseData } from "../types";
 
 export const authApi = {
