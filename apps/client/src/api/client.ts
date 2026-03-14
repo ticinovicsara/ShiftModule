@@ -2,19 +2,19 @@ import axios, {
   AxiosError,
   type AxiosInstance,
   type AxiosRequestConfig,
-  type AxiosResponse,
 } from "axios";
+import { ROUTE_PATHS } from "../constants";
 import type { ApiEnvelope } from "../types";
 
 const ACCESS_TOKEN_KEY = "shiftmodule.access_token";
 
-export class ApiClientError extends Error {
+export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly details: unknown;
 
   constructor(message: string, statusCode: number, details: unknown) {
     super(message);
-    this.name = "ApiClientError";
+    this.name = "ApiError";
     this.statusCode = statusCode;
     this.details = details;
   }
@@ -27,9 +27,9 @@ function getApiBaseUrl() {
   );
 }
 
-function parseApiError(error: unknown): ApiClientError {
+function parseApiError(error: unknown): ApiError {
   if (!axios.isAxiosError(error)) {
-    return new ApiClientError("Unexpected client error occurred", 0, error);
+    return new ApiError("Unexpected client error occurred", 0, error);
   }
 
   const axiosError = error as AxiosError<ApiEnvelope<unknown>>;
@@ -38,13 +38,15 @@ function parseApiError(error: unknown): ApiClientError {
   const message =
     messageFromEnvelope ?? axiosError.message ?? "Unexpected network error";
 
-  return new ApiClientError(message, statusCode, axiosError.response?.data);
+  return new ApiError(message, statusCode, axiosError.response?.data);
 }
 
-function unwrapEnvelope<TData>(
-  response: AxiosResponse<ApiEnvelope<TData>>,
-): TData {
-  return response.data.data;
+function isApiEnvelope<TData>(value: unknown): value is ApiEnvelope<TData> {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  return "data" in value && "message" in value && "error" in value;
 }
 
 class ApiClient {
@@ -69,19 +71,26 @@ class ApiClient {
     });
 
     this.instance.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        const payload = response.data;
+        if (isApiEnvelope<unknown>(payload)) {
+          return payload.data;
+        }
+
+        return payload;
+      },
       (error: unknown) => {
         const parsed = parseApiError(error);
 
         if (parsed.statusCode === 401) {
           localStorage.removeItem(ACCESS_TOKEN_KEY);
-          if (window.location.pathname !== "/login") {
-            window.location.assign("/login");
+          if (window.location.pathname !== ROUTE_PATHS.login) {
+            window.location.assign(ROUTE_PATHS.login);
           }
         }
 
         if (parsed.statusCode >= 500) {
-          throw new ApiClientError(
+          throw new ApiError(
             "Server error occurred. Please try again later.",
             parsed.statusCode,
             parsed.details,
@@ -102,14 +111,8 @@ class ApiClient {
   }
 
   async get<TData>(url: string, params?: object): Promise<TData> {
-    try {
-      const response = await this.instance.get<ApiEnvelope<TData>>(url, {
-        params,
-      });
-      return unwrapEnvelope(response);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    const response = await this.instance.get<TData>(url, { params });
+    return response;
   }
 
   async post<TData>(
@@ -117,34 +120,18 @@ class ApiClient {
     body?: object,
     config?: AxiosRequestConfig,
   ): Promise<TData> {
-    try {
-      const response = await this.instance.post<ApiEnvelope<TData>>(
-        url,
-        body,
-        config,
-      );
-      return unwrapEnvelope(response);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    const response = await this.instance.post<TData>(url, body, config);
+    return response;
   }
 
   async patch<TData>(url: string, body?: object): Promise<TData> {
-    try {
-      const response = await this.instance.patch<ApiEnvelope<TData>>(url, body);
-      return unwrapEnvelope(response);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    const response = await this.instance.patch<TData>(url, body);
+    return response;
   }
 
   async delete<TData>(url: string): Promise<TData> {
-    try {
-      const response = await this.instance.delete<ApiEnvelope<TData>>(url);
-      return unwrapEnvelope(response);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    const response = await this.instance.delete<TData>(url);
+    return response;
   }
 }
 
