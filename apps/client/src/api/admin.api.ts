@@ -15,7 +15,7 @@ import type {
   UpdateUserDto,
 } from "../types";
 import { client } from "./client";
-import { API_ENDPOINTS } from "./endpoints";
+import { API_ENDPOINTS } from "../constants";
 
 interface ReportIssueResponse {
   message: string;
