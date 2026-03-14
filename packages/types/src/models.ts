@@ -26,7 +26,7 @@ export interface Group {
   capacity: number;
   currentCount: number;
   isActive: boolean;
-  activityTypeId: string;
+  sessionTypeId: string;
 }
 
 export interface SessionType {
@@ -60,7 +60,7 @@ export interface SwapRequest {
   id: string;
   studentId: string;
   courseId: string;
-  activityTypeId: string;
+  sessionTypeId: string;
   currentGroupId: string;
   desiredGroupId: string;
   secondChoiceGroupId?: string;

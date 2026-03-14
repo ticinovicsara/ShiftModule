@@ -53,7 +53,7 @@ export interface AssignProfessorDto {
 export interface CreateGroupDto {
   name: string;
   capacity: number;
-  activityTypeId: string;
+  sessionTypeId: string;
 }
 
 export interface UpdateGroupDto {
@@ -82,7 +82,7 @@ export interface UpdateSessionTypeDto {
 
 export interface CreateSwapRequestDto {
   courseId: string;
-  activityTypeId: string;
+  sessionTypeId: string;
   currentGroupId: string;
   desiredGroupId: string;
   secondChoiceGroupId?: string;
