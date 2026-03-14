@@ -1,6 +1,5 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
-import { StudentService } from './student.service';
-import { CreateSwapRequestDto } from './dto/create-swap-request.dto';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { StudentService } from './student.service'; 
 import { AuthGuard, RolesGuard, Roles } from '../auth';
 
 @Controller('student')

@@ -1,31 +1,31 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
+import { AdminModule } from './admin';
 import { AppService } from './app.service';
 import { AuthModule } from './auth';
-import { StudentModule } from './student';
-import { SwapRequestModule } from './swap-request';
+import { CourseModule } from './course';
+import { GroupModule } from './group';
+import { NotificationModule } from './notification';
 import { ProfessorModule } from './professor';
-import { AdminModule } from './admin';
-import { UserModule } from './user/user.module';
-import { StudyMajorModule } from './study-major/study-major.module';
-import { CourseModule } from './course/course.module';
-import { GroupModule } from './group/group.module';
-import { NotificationModule } from './notification/notification.module';
-import { SessionTypeModule } from './session-type/session-type.module';
+import { SessionTypeModule } from './session-type';
+import { StudentModule } from './student';
+import { StudyMajorModule } from './study-major';
+import { SwapRequestModule } from './swap-request';
+import { UserModule } from './user';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
-    StudentModule,
     AuthModule,
-    AdminModule,
-    ProfessorModule,
-    SwapRequestModule,
     UserModule,
     StudyMajorModule,
     CourseModule,
     GroupModule,
-    NotificationModule,
     SessionTypeModule,
+    StudentModule,
+    SwapRequestModule,
+    NotificationModule,
+    AdminModule,
+    ProfessorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

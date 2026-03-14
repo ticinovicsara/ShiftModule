@@ -23,20 +23,17 @@ export class SwapRequestService {
     private readonly studentCourseRepo: MockStudentCourseRepository,
   ) {}
 
-  // ─── STUDENT ────────────────────────────────────────────────
 
   async getMyRequests(studentId: string) {
     return this.swapRequestRepo.findByStudent(studentId);
   }
 
   async createRequest(studentId: string, dto: CreateSwapRequestDto) {
-    // 1. Check enrollment
     const enrollments = await this.studentCourseRepo.findByStudent(studentId);
     if (!enrollments.some((e) => e.courseId === dto.courseId)) {
       throw new BadRequestException('Student not enrolled in this course');
     }
 
-    // 2. Check no existing pending request
     const existing = await this.swapRequestRepo.findByStudent(studentId);
     const hasPending = existing.some(
       (r) =>
@@ -49,17 +46,14 @@ export class SwapRequestService {
       );
     }
 
-    // 3. Check desired group exists
     const desiredGroup = await this.groupRepo.findById(dto.desiredGroupId);
     if (!desiredGroup) throw new NotFoundException('Desired group not found');
 
-    // 4. Check capacity (skip if partner swap)
     const hasCapacity = await this.groupRepo.hasCapacity(dto.desiredGroupId);
     if (!hasCapacity && !dto.partnerEmail) {
       throw new BadRequestException('Desired group is full');
     }
 
-    // 5. Calculate priority score
     const previousAttempts = existing.filter(
       (r) =>
         r.activityTypeId === dto.activityTypeId &&
@@ -72,7 +66,6 @@ export class SwapRequestService {
       (mockGpa / 5.0) * 0.3 +
       (Math.min(previousAttempts, 5) / 5) * 0.3;
 
-    // 6. Create request
     const request = await this.swapRequestRepo.create({
       studentId,
       courseId: dto.courseId,
@@ -85,10 +78,9 @@ export class SwapRequestService {
       partnerConfirmed: false,
       status: SwapRequestStatus.PENDING,
       priorityScore,
-      satisfiedWish: null,
+      satisfiedWish: undefined,
     });
 
-    // 7. Try auto-process
     await this.tryAutoProcess(request.id);
     return request;
   }
@@ -104,8 +96,6 @@ export class SwapRequestService {
     await this.tryAutoProcess(requestId);
     return { message: 'Partner confirmed' };
   }
-
-  // ─── PROFESSOR ──────────────────────────────────────────────
 
   async getCourseRequests(
     courseId: string,
@@ -123,7 +113,6 @@ export class SwapRequestService {
       );
     }
 
-    // AUTO — read only log
     return requests.filter((r) => r.status === SwapRequestStatus.AUTO_RESOLVED);
   }
 
@@ -165,8 +154,6 @@ export class SwapRequestService {
     });
   }
 
-  // ─── INTERNAL ───────────────────────────────────────────────
-
   async tryAutoProcess(requestId: string) {
     const request = await this.swapRequestRepo.findById(requestId);
     if (!request || request.status !== SwapRequestStatus.PENDING) return;
@@ -174,7 +161,6 @@ export class SwapRequestService {
     const match = await this.swapRequestRepo.findMatchingRequest(request);
     if (!match) return;
 
-    // Execute swap for both students
     await this.executeSwap(
       request.studentId,
       request.currentGroupId,
@@ -186,7 +172,6 @@ export class SwapRequestService {
       match.desiredGroupId,
     );
 
-    // Resolve both requests
     await this.swapRequestRepo.update(request.id, {
       status: SwapRequestStatus.AUTO_RESOLVED,
       satisfiedWish: true,
