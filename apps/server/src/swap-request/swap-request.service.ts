@@ -23,9 +23,15 @@ export class SwapRequestService {
     private readonly studentCourseRepo: MockStudentCourseRepository,
   ) {}
 
-
   async getMyRequests(studentId: string) {
     return this.swapRequestRepo.findByStudent(studentId);
+  }
+
+  async getAllRequests(courseId?: string) {
+    if (courseId) {
+      return this.swapRequestRepo.findByCourse(courseId);
+    }
+    return this.swapRequestRepo.findMany();
   }
 
   async createRequest(studentId: string, dto: CreateSwapRequestDto) {
@@ -37,7 +43,7 @@ export class SwapRequestService {
     const existing = await this.swapRequestRepo.findByStudent(studentId);
     const hasPending = existing.some(
       (r) =>
-        r.activityTypeId === dto.activityTypeId &&
+        r.sessionTypeId === dto.sessionTypeId &&
         r.status === SwapRequestStatus.PENDING,
     );
     if (hasPending) {
@@ -56,7 +62,7 @@ export class SwapRequestService {
 
     const previousAttempts = existing.filter(
       (r) =>
-        r.activityTypeId === dto.activityTypeId &&
+        r.sessionTypeId === dto.sessionTypeId &&
         r.status === SwapRequestStatus.REJECTED,
     ).length;
 
@@ -69,7 +75,7 @@ export class SwapRequestService {
     const request = await this.swapRequestRepo.create({
       studentId,
       courseId: dto.courseId,
-      activityTypeId: dto.activityTypeId,
+      sessionTypeId: dto.sessionTypeId,
       currentGroupId: dto.currentGroupId,
       desiredGroupId: dto.desiredGroupId,
       secondChoiceGroupId: dto.secondChoiceGroupId,

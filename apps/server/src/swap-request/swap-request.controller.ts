@@ -8,8 +8,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SwapRequestService } from './swap-request.service';
-import { CreateSwapRequestDto } from './dto/create-swap-request.dto';
-import { RejectSwapRequestDto } from './dto/reject-swap-request.dto';
+import type { CreateSwapRequestDto } from './dto/create-swap-request.dto';
+import type { RejectSwapRequestDto } from './dto/reject-swap-request.dto';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
 
 @Controller('swap-request')
@@ -23,6 +23,13 @@ export class SwapRequestController {
   @Roles('STUDENT')
   async getMyRequests(@Param('studentId') studentId: string) {
     const data = await this.swapRequestService.getMyRequests(studentId);
+    return { data, error: null, message: 'OK' };
+  }
+
+  @Get('admin/requests')
+  @Roles('ADMIN')
+  async getAllRequests(@Query('courseId') courseId?: string) {
+    const data = await this.swapRequestService.getAllRequests(courseId);
     return { data, error: null, message: 'OK' };
   }
 
