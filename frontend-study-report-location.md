@@ -2,7 +2,7 @@
 
 Detailed report:
 
-- `frontend-study-report.md`
+- `/memories/repo/frontend-study-report.md`
 
 Repository memory summary:
 
@@ -10,5 +10,5 @@ Repository memory summary:
 
 Purpose:
 
-- `frontend-study-report.md` keeps the long-form research in the project root.
+- `/memories/repo/frontend-study-report.md` keeps the long-form research with the rest of repository memory files.
 - `/memories/repo/shiftmodule-frontend-context.md` keeps a concise reusable summary for future sessions.
