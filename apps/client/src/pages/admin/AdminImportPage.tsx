@@ -9,6 +9,7 @@ import {
 } from "../../components/ui";
 import { LABELS } from "../../constants";
 import { useStudents } from "../../hooks";
+import { UserRole } from "@repo/types";
 
 export function AdminImportPage() {
   const { importStudents } = useStudents();
@@ -20,7 +21,7 @@ export function AdminImportPage() {
         email,
         firstName: "Ime",
         lastName: "Prezime",
-        role: "STUDENT",
+        role: UserRole.STUDENT,
       },
     ]);
   };

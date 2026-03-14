@@ -15,7 +15,7 @@ export function StudentSwapStep2Page() {
 
     await create({
       courseId: params.id,
-      activityTypeId: "activity",
+      sessionTypeId: "activity",
       currentGroupId: "group-a",
       desiredGroupId: "group-b",
       reason: "",

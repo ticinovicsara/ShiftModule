@@ -4,7 +4,7 @@ import type {
   SwapRequest,
   UserRole,
 } from "@repo/types";
-import { UserRole as Role } from "@repo/types";
+import { UserRole as Role, SwapMode } from "@repo/types";
 import { useCallback, useContext, useMemo } from "react";
 import { swapRequestApi } from "../api";
 import { AuthContext } from "../context/AuthContext";
@@ -15,7 +15,7 @@ async function fetchByRole(role: UserRole | null) {
   if (role === Role.PROFESSOR) {
     return swapRequestApi.professor.getByCourse({
       courseId: "",
-      mode: "MANUAL",
+      mode: SwapMode.MANUAL,
     });
   }
 
