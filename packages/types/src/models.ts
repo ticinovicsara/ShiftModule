@@ -1,8 +1,10 @@
 import {
   SessionKind,
+  StudentSwapViewState,
   StudentGroupStatus,
   SwapMode,
   SwapRequestStatus,
+  SwapRequestType,
   UserRole,
 } from "./enums";
 
@@ -59,19 +61,38 @@ export interface StudentCourse {
 export interface SwapRequest {
   id: string;
   studentId: string;
+  partnerStudentId?: string;
   courseId: string;
   sessionTypeId: string;
   currentGroupId: string;
   desiredGroupId: string;
   secondChoiceGroupId?: string;
+  requestType: SwapRequestType;
   reason?: string;
   partnerEmail?: string;
   partnerConfirmed: boolean;
   status: SwapRequestStatus;
+  processingMode?: "MANUAL" | "AUTOMATIC";
+  courseTitle?: string;
+  currentGroupName?: string;
+  desiredGroupName?: string;
+  isIncomingPartnerRequest?: boolean;
+  studentViewState?: StudentSwapViewState;
   priorityScore?: number;
   satisfiedWish?: boolean;
   createdAt: Date;
   updatedAt: Date;
+  student?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+}
+
+export interface SwapRequestWithUsers extends SwapRequest {
+  student?: Pick<User, "id" | "firstName" | "lastName" | "email">;
+  partner?: Pick<User, "id" | "firstName" | "lastName" | "email">;
 }
 
 export interface ApiEnvelope<TData> {

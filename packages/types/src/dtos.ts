@@ -1,4 +1,10 @@
-import { ReportIssueReason, SessionKind, SwapMode, UserRole } from "./enums";
+import {
+  ReportIssueReason,
+  SessionKind,
+  SwapMode,
+  SwapRequestType,
+  UserRole,
+} from "./enums";
 import { User } from "./models";
 
 export interface LoginRequestDto {
@@ -86,6 +92,7 @@ export interface CreateSwapRequestDto {
   currentGroupId: string;
   desiredGroupId: string;
   secondChoiceGroupId?: string;
+  requestType?: SwapRequestType;
   reason?: string;
   partnerEmail?: string;
 }
@@ -95,6 +102,6 @@ export interface RejectSwapRequestDto {
 }
 
 export interface ProfessorRequestQuery {
-  courseId: string;
+  courseId?: string;
   mode: SwapMode;
 }
