@@ -4,6 +4,7 @@ import { Card } from "../ui";
 export interface CourseCardProps {
   course: Course;
   subtitle?: string;
+  professorName?: string;
   variant?: "student" | "professor" | "desktop";
 }
 
@@ -23,6 +24,7 @@ function getPatternColor(id: string) {
 export function CourseCard({
   course,
   subtitle,
+  professorName,
   variant = "student",
 }: CourseCardProps) {
   const patternColor = getPatternColor(course.id);
@@ -31,17 +33,22 @@ export function CourseCard({
 
   return (
     <Card className="overflow-hidden p-0">
-      {/* Slika/pattern dio */}
       <div className={`h-32 w-full ${patternColor}`} />
 
-      {/* Info dio */}
       <div className="p-4">
-        {subtitle && <p className="text-xs text-slate-500 mb-1">{subtitle}</p>}
         <p className={`${titleClass} text-slate-900 text-center`}>
           {course.title}
         </p>
+        {subtitle ? (
+          <p className="mt-1 text-center text-xs text-slate-500">{subtitle}</p>
+        ) : null}
+        {professorName ? (
+          <p className="mt-1 text-center text-xs text-slate-500">
+            Profesor: {professorName}
+          </p>
+        ) : null}
         {course.swapMode && (
-          <p className="text-xs text-slate-500 mt-1">{course.swapMode}</p>
+          <p className="mt-1 text-xs text-slate-500">{course.swapMode}</p>
         )}
       </div>
     </Card>

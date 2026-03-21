@@ -1,8 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import { CourseCard } from "../../components/shared";
 import { LABELS } from "../../constants";
+import { ROUTE_PATHS } from "../../constants";
 import { useCourses } from "../../hooks";
 
 export function ProfessorCoursesPage() {
+  const navigate = useNavigate();
   const { data, loading, error } = useCourses();
 
   if (loading) {
@@ -16,12 +19,27 @@ export function ProfessorCoursesPage() {
   return (
     <section className="grid gap-4 lg:grid-cols-2">
       {(data ?? []).map((course) => (
-        <CourseCard
-          course={course}
+        <div
           key={course.id}
-          subtitle={LABELS.nav.myCourses}
-          variant="professor"
-        />
+          className="cursor-pointer transition-opacity hover:opacity-80 active:opacity-60"
+          onClick={() =>
+            navigate(ROUTE_PATHS.professor.courseDetail(course.id))
+          }
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              navigate(ROUTE_PATHS.professor.courseDetail(course.id));
+            }
+          }}
+        >
+          <CourseCard
+            course={course}
+            subtitle={LABELS.nav.myCourses}
+            variant="professor"
+          />
+        </div>
       ))}
     </section>
   );

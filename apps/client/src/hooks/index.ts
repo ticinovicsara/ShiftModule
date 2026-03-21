@@ -3,6 +3,7 @@ export * from "./useDashboardStats";
 export * from "./useFetch";
 export * from "./useGroups";
 export * from "./useMutation";
+export * from "./useProfessorDashboardStats";
 export * from "./useSessionTypes";
 export * from "./useStudents";
 export * from "./useStudyMajors";

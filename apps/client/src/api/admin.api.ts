@@ -52,6 +52,24 @@ export const adminApi = {
 
   courses: {
     getAll: () => client.get<Course[]>(API_ENDPOINTS.admin.courses),
+    getById: (id: string) =>
+      client.get<{
+        course: Course;
+        groups: Group[];
+        students: Array<{
+          id: string;
+          firstName: string;
+          lastName: string;
+          email: string;
+          currentGroupId?: string;
+          currentGroupName?: string;
+        }>;
+        stats: {
+          totalStudents: number;
+          groupsCount: number;
+          pendingSwapRequests: number;
+        };
+      }>(API_ENDPOINTS.admin.courseById(id)),
     create: (dto: CreateCourseDto) =>
       client.post<Course>(API_ENDPOINTS.admin.courses, dto),
     update: (id: string, dto: UpdateCourseDto) =>
@@ -70,6 +88,10 @@ export const adminApi = {
       client.patch<Group>(API_ENDPOINTS.admin.groupById(id), dto),
     updateCapacity: (id: string, dto: UpdateGroupCapacityDto) =>
       client.patch<Group>(API_ENDPOINTS.admin.groupCapacity(id), dto),
+    moveStudentToGroup: (studentId: string, groupId: string) =>
+      client.post<{ success: boolean; message: string }>(
+        `/admin/students/${studentId}/move-to-group/${groupId}`,
+      ),
     remove: (id: string) =>
       client.delete<Group>(API_ENDPOINTS.admin.groupById(id)),
     reportIssue: (id: string, dto: ReportIssueDto) =>

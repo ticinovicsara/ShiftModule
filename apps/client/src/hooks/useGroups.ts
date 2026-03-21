@@ -19,7 +19,7 @@ export function useGroups() {
   }
 
   const fetchAll = useCallback(async () => {
-    if (auth.role !== Role.ADMIN) {
+    if (auth.role !== Role.ADMIN && auth.role !== Role.PROFESSOR) {
       return [] as Group[];
     }
 
