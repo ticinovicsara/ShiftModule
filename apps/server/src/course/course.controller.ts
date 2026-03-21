@@ -6,8 +6,10 @@ import {
   Delete,
   Body,
   Param,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { CourseService } from './course.service';
 import type { CreateCourseDto } from './dto/create-course.dto';
 import type { UpdateCourseDto } from './dto/update-course.dto';
@@ -59,8 +61,12 @@ export class CourseController {
 
   @Get('professor/courses')
   @Roles('PROFESSOR')
-  async findMyCoruses(@Param('professorId') professorId: string) {
-    const data = await this.courseService.findById(professorId);
+  async findMyCoruses(@Req() request: Request) {
+    const professorId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
+    const data = await this.courseService.findCoursesByProfessor(
+      professorId ?? '',
+    );
     return { data, error: null, message: 'OK' };
   }
 

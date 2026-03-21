@@ -22,6 +22,21 @@ export class UserService {
     return user;
   }
 
+  async findByIds(ids: string[]) {
+    const users = await this.userRepo.findMany();
+    const idSet = new Set(ids);
+
+    return users
+      .filter((user) => idSet.has(user.id))
+      .map(({ id, firstName, lastName, email, role }) => ({
+        id,
+        firstName,
+        lastName,
+        email,
+        role,
+      }));
+  }
+
   async findByEmail(email: string) {
     const user = await this.userRepo.findByEmail(email);
     if (!user) throw new NotFoundException(`User ${email} not found`);

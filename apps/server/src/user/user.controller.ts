@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import type { CreateUserDto } from './dto/create-user.dto';
@@ -22,6 +23,13 @@ export class UserController {
   @Get()
   async findAll() {
     const data = await this.userService.findAll();
+    return { data, error: null, message: 'OK' };
+  }
+
+  @Get('batch')
+  async findByIds(@Query('ids') ids: string) {
+    const idList = ids.split(',').filter(Boolean);
+    const data = await this.userService.findByIds(idList);
     return { data, error: null, message: 'OK' };
   }
 

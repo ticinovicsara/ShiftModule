@@ -19,7 +19,7 @@ export class AuthService {
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET ?? 'secret', {
-      expiresIn: '8h',
+      expiresIn: '100d',
     });
 
     return { token, user: payload };
