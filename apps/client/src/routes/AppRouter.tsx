@@ -6,11 +6,15 @@ import { AuthLayout } from "../layouts/AuthLayout";
 import {
   LoginPage,
   AdminDashboardPage,
+  AdminRequestsPage,
+  AdminSettingsPage,
   AdminStudentsPage,
   AdminImportPage,
   AdminCoursesPage,
   AdminCourseDetailPage,
   ProfessorCoursesPage,
+  ProfessorRequestsPage,
+  ProfessorSettingsPage,
   ProfessorCourseDetailPage,
   ProfessorRequestDetailPage,
   ProfessorAutoLogPage,
@@ -19,11 +23,11 @@ import {
   StudentSwapStep1Page,
   StudentSwapStep2Page,
   StudentRequestsPage,
+  StudentSettingsPage,
   ConfirmSwapPage,
   UnauthorizedPage,
   NotFoundPage,
 } from "../pages";
-import { SettingsPage } from "../pages/shared/SettingsPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 export function AppRouter() {
@@ -42,6 +46,10 @@ export function AppRouter() {
           <Route
             path={ROUTE_PATHS.admin.students}
             element={<AdminStudentsPage />}
+          />
+          <Route
+            path={ROUTE_PATHS.admin.requests}
+            element={<AdminRequestsPage />}
           />
           <Route
             path={ROUTE_PATHS.admin.studentsImport}
@@ -67,7 +75,10 @@ export function AppRouter() {
             path={ROUTE_PATHS.routePatterns.adminAutoAssign}
             element={<AdminCourseDetailPage />}
           />
-          <Route path={ROUTE_PATHS.admin.settings} element={<SettingsPage />} />
+          <Route
+            path={ROUTE_PATHS.admin.settings}
+            element={<AdminSettingsPage />}
+          />
         </Route>
       </Route>
 
@@ -76,6 +87,10 @@ export function AppRouter() {
           <Route
             path={ROUTE_PATHS.professor.dashboard}
             element={<ProfessorCoursesPage />}
+          />
+          <Route
+            path={ROUTE_PATHS.professor.requests}
+            element={<ProfessorRequestsPage />}
           />
           <Route
             path={ROUTE_PATHS.professor.courses}
@@ -103,7 +118,7 @@ export function AppRouter() {
           />
           <Route
             path={ROUTE_PATHS.professor.settings}
-            element={<SettingsPage />}
+            element={<ProfessorSettingsPage />}
           />
         </Route>
       </Route>
@@ -136,7 +151,7 @@ export function AppRouter() {
           />
           <Route
             path={ROUTE_PATHS.student.settings}
-            element={<SettingsPage />}
+            element={<StudentSettingsPage />}
           />
         </Route>
       </Route>
