@@ -37,7 +37,11 @@ export const NAVIGATION_CONFIG: Record<
         path: ROUTE_PATHS.admin.dashboard,
         icon: "home",
       },
-      { label: LABELS.nav.requests, path: unresolvedPath, icon: "requests" },
+      {
+        label: LABELS.nav.requests,
+        path: ROUTE_PATHS.admin.requests,
+        icon: "requests",
+      },
       {
         label: LABELS.nav.groups,
         path: ROUTE_PATHS.admin.groups,
@@ -70,7 +74,11 @@ export const NAVIGATION_CONFIG: Record<
         path: ROUTE_PATHS.admin.students,
         icon: "students",
       },
-      { label: LABELS.nav.requests, path: unresolvedPath, icon: "requests" },
+      {
+        label: LABELS.nav.requests,
+        path: ROUTE_PATHS.admin.requests,
+        icon: "requests",
+      },
       {
         label: LABELS.nav.studyMajors,
         path: ROUTE_PATHS.admin.studyMajors,
@@ -95,7 +103,11 @@ export const NAVIGATION_CONFIG: Record<
         path: ROUTE_PATHS.professor.courses,
         icon: "courses",
       },
-      { label: LABELS.nav.requests, path: unresolvedPath, icon: "requests" },
+      {
+        label: LABELS.nav.requests,
+        path: ROUTE_PATHS.professor.requests,
+        icon: "requests",
+      },
       { label: LABELS.nav.groups, path: unresolvedPath, icon: "groups" },
       { label: LABELS.nav.schedule, path: unresolvedPath, icon: "schedule" },
       {
@@ -110,6 +122,11 @@ export const NAVIGATION_CONFIG: Record<
         label: LABELS.nav.dashboard,
         path: ROUTE_PATHS.professor.dashboard,
         icon: "dashboard",
+      },
+      {
+        label: LABELS.nav.requests,
+        path: ROUTE_PATHS.professor.requests,
+        icon: "requests",
       },
       {
         label: LABELS.nav.myCourses,
