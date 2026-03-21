@@ -63,6 +63,9 @@ export function useSwapRequests() {
   const confirmPartnerMutation = useMutation((id: string) =>
     swapRequestApi.student.confirmPartner(id),
   );
+  const declinePartnerMutation = useMutation((id: string) =>
+    swapRequestApi.student.declinePartner(id),
+  );
 
   return useMemo(
     () => ({
@@ -74,10 +77,12 @@ export function useSwapRequests() {
       approve: approveMutation.execute,
       reject: rejectMutation.execute,
       confirmPartner: confirmPartnerMutation.execute,
+      declinePartner: declinePartnerMutation.execute,
     }),
     [
       approveMutation.execute,
       confirmPartnerMutation.execute,
+      declinePartnerMutation.execute,
       createMutation.execute,
       data,
       error,

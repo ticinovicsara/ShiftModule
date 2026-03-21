@@ -16,9 +16,7 @@ export const ROUTE_PATHS = {
     studentSwapStep1: "/student/courses/:id/swap/step-1",
     studentSwapStep2: "/student/courses/:id/swap/step-2",
     studentRequestDetail: "/student/requests/:id",
-    confirmSwap: "/confirm-swap/:requestId",
   },
-  confirmSwap: (requestId: string) => `/confirm-swap/${requestId}`,
   admin: {
     dashboard: "/admin/dashboard",
     requests: "/admin/requests",
@@ -45,11 +43,11 @@ export const ROUTE_PATHS = {
   },
   student: {
     courses: "/student/courses",
+    notifications: "/student/notifications",
     settings: "/student/settings",
     courseDetail: (id: string) => `/student/courses/${id}`,
     swapStep1: (id: string) => `/student/courses/${id}/swap/step-1`,
     swapStep2: (id: string) => `/student/courses/${id}/swap/step-2`,
-    requests: "/student/requests",
     requestDetail: (id: string) => `/student/requests/${id}`,
   },
 } as const;

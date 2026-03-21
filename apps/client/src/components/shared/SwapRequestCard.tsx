@@ -27,30 +27,17 @@ export function SwapRequestCard({
   request,
   compact = false,
 }: SwapRequestCardProps) {
-  if (!request.student && !request.partner) {
-    throw new Error(
-      "SwapRequestCard requires at least student or partner information",
-    );
-  }
-
-  if (
-    !request.courseTitle ||
-    !request.currentGroupName ||
-    !request.desiredGroupName
-  ) {
-    throw new Error(
-      "SwapRequestCard requires courseTitle/currentGroupName/desiredGroupName",
-    );
-  }
-
-  const title = request.courseTitle;
+  const fallbackCourseTitle = `Kolegij (${request.courseId})`;
+  const currentGroupName = request.currentGroupName ?? request.currentGroupId;
+  const desiredGroupName = request.desiredGroupName ?? request.desiredGroupId;
+  const title = request.courseTitle ?? fallbackCourseTitle;
   const switchDescription = compact
-    ? `${request.currentGroupName} → ${request.desiredGroupName}`
-    : `Zamjena grupe: ${request.currentGroupName} -> ${request.desiredGroupName}`;
+    ? `${currentGroupName} → ${desiredGroupName}`
+    : `Zamjena grupe: ${currentGroupName} -> ${desiredGroupName}`;
 
   const studentName = request.student
     ? `${request.student.firstName} ${request.student.lastName}`
-    : "Nepoznat student";
+    : `Student (${request.studentId})`;
 
   const partnerName = request.partner
     ? `${request.partner.firstName} ${request.partner.lastName}`

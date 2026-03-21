@@ -1,7 +1,13 @@
 import { SwapRequestStatus, UserRole } from "@repo/types";
 import { useContext, useState } from "react";
 import { FilterTabs, SwapRequestCard } from "../../components/shared";
-import { Button, EmptyState, ErrorState, Spinner } from "../../components/ui";
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  Modal,
+  Spinner,
+} from "../../components/ui";
 import { LABELS } from "../../constants";
 import { AuthContext } from "../../context/AuthContext";
 import {
@@ -23,6 +29,11 @@ interface RequestsPageProps {
   tabs?: { label: string; value: string }[];
 }
 
+type PendingAction = {
+  requestId: string;
+  action: "approve" | "reject";
+};
+
 const REJECT_REASON_BY_ROLE: Partial<Record<UserRole, string>> = {
   [UserRole.ADMIN]: "Odbijeno od admina",
   [UserRole.PROFESSOR]: "Odbijeno od profesora",
@@ -37,6 +48,9 @@ export function RequestsPage({
   const { data: courses } = useCourses();
   const [activeTab, setActiveTab] = useState("all");
   const [actionId, setActionId] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(
+    null,
+  );
 
   const resolvedRejectReason =
     rejectReason ??
@@ -70,6 +84,27 @@ export function RequestsPage({
     }
   };
 
+  const closeConfirmationModal = () => {
+    if (actionId) {
+      return;
+    }
+    setPendingAction(null);
+  };
+
+  const confirmPendingAction = async () => {
+    if (!pendingAction) {
+      return;
+    }
+
+    if (pendingAction.action === "approve") {
+      await handleApprove(pendingAction.requestId);
+    } else {
+      await handleReject(pendingAction.requestId);
+    }
+
+    setPendingAction(null);
+  };
+
   if (loading || usersLoading) return <Spinner />;
 
   if (error || usersError) {
@@ -100,27 +135,31 @@ export function RequestsPage({
         />
       ) : (
         cardRequests.map((request) => (
-          <div className="grid gap-2" key={request.id}>
+          <div className="grid gap-0" key={request.id}>
             <SwapRequestCard request={request} />
-            {request.status !== SwapRequestStatus.AUTO_RESOLVED ? (
+            {request.status === SwapRequestStatus.PENDING ? (
               <div className="flex flex-wrap gap-2 p-2">
                 <Button
-                  disabled={
-                    actionId === request.id ||
-                    request.status !== SwapRequestStatus.PENDING
+                  disabled={actionId === request.id}
+                  onClick={() =>
+                    setPendingAction({
+                      requestId: request.id,
+                      action: "approve",
+                    })
                   }
-                  onClick={() => handleApprove(request.id)}
                   size="sm"
                   variant="success"
                 >
                   Prihvati
                 </Button>
                 <Button
-                  disabled={
-                    actionId === request.id ||
-                    request.status !== SwapRequestStatus.PENDING
+                  disabled={actionId === request.id}
+                  onClick={() =>
+                    setPendingAction({
+                      requestId: request.id,
+                      action: "reject",
+                    })
                   }
-                  onClick={() => handleReject(request.id)}
                   size="sm"
                   variant="danger"
                 >
@@ -131,6 +170,34 @@ export function RequestsPage({
           </div>
         ))
       )}
+      <Modal
+        description="Jeste li sigurni"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button
+              disabled={Boolean(actionId)}
+              onClick={closeConfirmationModal}
+              variant="ghost"
+            >
+              Odustani
+            </Button>
+            <Button
+              disabled={Boolean(actionId)}
+              onClick={confirmPendingAction}
+              variant={
+                pendingAction?.action === "reject" ? "danger" : "success"
+              }
+            >
+              Potvrdi
+            </Button>
+          </div>
+        }
+        onClose={closeConfirmationModal}
+        open={Boolean(pendingAction)}
+        title="Potvrda"
+      >
+        <p className="text-sm text-slate-600">Jeste li sigurni</p>
+      </Modal>
     </section>
   );
 }

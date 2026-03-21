@@ -24,14 +24,7 @@ export interface NavigationItem {
   icon: NavigationIconName;
 }
 
-const unresolvedPath = ROUTE_PATHS.notFound;
-
 const studentNavigationItems: NavigationItem[] = [
-  {
-    label: LABELS.nav.home,
-    path: ROUTE_PATHS.student.courses,
-    icon: "home",
-  },
   {
     label: LABELS.nav.courses,
     path: ROUTE_PATHS.student.courses,
@@ -39,10 +32,23 @@ const studentNavigationItems: NavigationItem[] = [
   },
   {
     label: LABELS.nav.notifications,
-    path: unresolvedPath,
+    path: ROUTE_PATHS.student.notifications,
     icon: "notifications",
   },
-  { label: LABELS.nav.profile, path: unresolvedPath, icon: "profile" },
+  {
+    label: LABELS.nav.settings,
+    path: ROUTE_PATHS.student.settings,
+    icon: "settings",
+  },
+];
+
+const studentDesktopNavigationItems: NavigationItem[] = [
+  ...studentNavigationItems,
+  {
+    label: "Merlin",
+    path: "https://merlin.srce.hr",
+    icon: "courses",
+  },
 ];
 
 export const NAVIGATION_CONFIG: Record<
@@ -67,11 +73,6 @@ export const NAVIGATION_CONFIG: Record<
         icon: "groups",
       },
       {
-        label: "Swap potvrda",
-        path: ROUTE_PATHS.confirmSwap("test"),
-        icon: "requests",
-      },
-      {
         label: LABELS.nav.settings,
         path: ROUTE_PATHS.admin.settings,
         icon: "settings",
@@ -84,11 +85,6 @@ export const NAVIGATION_CONFIG: Record<
         icon: "dashboard",
       },
       {
-        label: LABELS.nav.courses,
-        path: ROUTE_PATHS.admin.courses,
-        icon: "courses",
-      },
-      {
         label: LABELS.nav.students,
         path: ROUTE_PATHS.admin.students,
         icon: "students",
@@ -96,16 +92,6 @@ export const NAVIGATION_CONFIG: Record<
       {
         label: LABELS.nav.requests,
         path: ROUTE_PATHS.admin.requests,
-        icon: "requests",
-      },
-      {
-        label: LABELS.nav.studyMajors,
-        path: ROUTE_PATHS.admin.studyMajors,
-        icon: "study-majors",
-      },
-      {
-        label: "Swap potvrda",
-        path: ROUTE_PATHS.confirmSwap("test"),
         icon: "requests",
       },
       {
@@ -118,23 +104,15 @@ export const NAVIGATION_CONFIG: Record<
   [UserRole.PROFESSOR]: {
     mobile: [
       {
-        label: LABELS.nav.courses,
-        path: ROUTE_PATHS.professor.courses,
-        icon: "courses",
-      },
-      {
         label: LABELS.nav.requests,
         path: ROUTE_PATHS.professor.requests,
         icon: "requests",
       },
-      { label: LABELS.nav.groups, path: unresolvedPath, icon: "groups" },
-      { label: LABELS.nav.schedule, path: unresolvedPath, icon: "schedule" },
       {
-        label: LABELS.nav.notifications,
-        path: unresolvedPath,
-        icon: "notifications",
+        label: LABELS.nav.groups,
+        path: ROUTE_PATHS.professor.courses,
+        icon: "groups",
       },
-      { label: LABELS.nav.profile, path: unresolvedPath, icon: "profile" },
     ],
     desktop: [
       {
@@ -148,22 +126,24 @@ export const NAVIGATION_CONFIG: Record<
         icon: "requests",
       },
       {
-        label: LABELS.nav.myCourses,
+        label: LABELS.nav.groups,
         path: ROUTE_PATHS.professor.courses,
-        icon: "courses",
+        icon: "groups",
       },
-      { label: LABELS.nav.students, path: unresolvedPath, icon: "students" },
-      { label: LABELS.nav.schedule, path: unresolvedPath, icon: "schedule" },
-      { label: LABELS.nav.reports, path: unresolvedPath, icon: "reports" },
       {
         label: LABELS.nav.settings,
         path: ROUTE_PATHS.professor.settings,
         icon: "settings",
       },
+      {
+        label: "Merlin",
+        path: "https://merlin.srce.hr",
+        icon: "courses",
+      },
     ],
   },
   [UserRole.STUDENT]: {
     mobile: studentNavigationItems,
-    desktop: studentNavigationItems,
+    desktop: studentDesktopNavigationItems,
   },
 };

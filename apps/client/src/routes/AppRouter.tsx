@@ -10,6 +10,7 @@ import {
   AdminImportPage,
   AdminCoursesPage,
   AdminCourseDetailPage,
+  ProfessorDashboardPage,
   ProfessorCoursesPage,
   ProfessorCourseDetailPage,
   ProfessorRequestDetailPage,
@@ -18,10 +19,9 @@ import {
   StudentCourseDetailPage,
   StudentSwapStep1Page,
   StudentSwapStep2Page,
-  StudentRequestsPage,
+  StudentNotificationsPage,
   RequestsPage,
   SettingsPage,
-  ConfirmSwapPage,
   UnauthorizedPage,
   NotFoundPage,
 } from "../pages";
@@ -77,7 +77,7 @@ export function AppRouter() {
         <Route element={<AppLayout />}>
           <Route
             path={ROUTE_PATHS.professor.dashboard}
-            element={<ProfessorCoursesPage />}
+            element={<ProfessorDashboardPage />}
           />
           <Route
             path={ROUTE_PATHS.professor.requests}
@@ -133,12 +133,8 @@ export function AppRouter() {
             element={<StudentSwapStep2Page />}
           />
           <Route
-            path={ROUTE_PATHS.student.requests}
-            element={<StudentRequestsPage />}
-          />
-          <Route
-            path={ROUTE_PATHS.routePatterns.studentRequestDetail}
-            element={<StudentRequestsPage />}
+            path={ROUTE_PATHS.student.notifications}
+            element={<StudentNotificationsPage />}
           />
           <Route
             path={ROUTE_PATHS.student.settings}
@@ -147,10 +143,6 @@ export function AppRouter() {
         </Route>
       </Route>
 
-      <Route
-        path={ROUTE_PATHS.routePatterns.confirmSwap}
-        element={<ConfirmSwapPage />}
-      />
       <Route path={ROUTE_PATHS.unauthorized} element={<UnauthorizedPage />} />
       <Route path={ROUTE_PATHS.notFound} element={<NotFoundPage />} />
       <Route path="/" element={<Navigate to={ROUTE_PATHS.login} replace />} />

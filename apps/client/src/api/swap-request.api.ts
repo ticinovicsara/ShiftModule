@@ -17,6 +17,8 @@ export const swapRequestApi = {
       client.post<SwapRequest>(API_ENDPOINTS.student.swapRequests, dto),
     confirmPartner: (requestId: string) =>
       client.post<SwapRequest>(API_ENDPOINTS.student.confirmPartner(requestId)),
+    declinePartner: (requestId: string) =>
+      client.post<SwapRequest>(API_ENDPOINTS.student.declinePartner(requestId)),
   },
   professor: {
     getByCourse: (query: ProfessorRequestQuery) =>

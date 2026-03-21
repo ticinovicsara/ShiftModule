@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
     courses: "/professor/courses",
     courseById: (id: string) => `/professor/courses/${id}`,
     courseSwapMode: (id: string) => `/professor/courses/${id}/swap-mode`,
+    dashboardStats: "/professor/dashboard/stats",
     swapRequests: "/swap-request/professor/requests",
     approveSwapRequest: (id: string) =>
       `/swap-request/professor/requests/${id}/approve`,
@@ -37,9 +38,13 @@ export const API_ENDPOINTS = {
   },
   student: {
     courses: "/student/courses",
+    courseOverviews: "/student/course-overviews",
+    courseById: (id: string) => `/student/courses/${id}`,
     requests: "/student/requests",
     swapRequests: "/swap-request/student/requests",
     confirmPartner: (id: string) =>
       `/swap-request/student/requests/${id}/confirm-partner`,
+    declinePartner: (id: string) =>
+      `/swap-request/student/requests/${id}/decline-partner`,
   },
 } as const;
