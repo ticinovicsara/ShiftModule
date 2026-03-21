@@ -21,7 +21,7 @@ export class MockUserRepository extends BaseRepository<User> {
   async create(data: Omit<User, 'id'>): Promise<User> {
     const newUser: User = {
       ...data,
-      id: crypto.randomUUID(),
+      id: randomUUID(),
     };
     this.store.push(newUser);
     return newUser;

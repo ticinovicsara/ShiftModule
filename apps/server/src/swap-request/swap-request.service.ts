@@ -372,17 +372,36 @@ export class SwapRequestService {
       ? await this.swapRequestRepo.findByCourse(courseId)
       : await this.swapRequestRepo.findMany();
 
-    if (mode === 'MANUAL') {
-      return requests.filter((r) => r.status === SwapRequestStatus.PENDING);
-    }
+    const visibleRequests = this.dedupeStaffCards(
+      requests.filter((request) => this.isVisibleToStaff(request)),
+    );
 
-    if (mode === 'SEMI_AUTO') {
-      return requests.filter(
-        (r) => r.status === SwapRequestStatus.PENDING && !r.partnerConfirmed,
+    let filtered: SwapRequest[] = [];
+    if (mode === 'MANUAL') {
+      filtered = visibleRequests.filter(
+        (request) => request.status === SwapRequestStatus.PENDING,
+      );
+    } else if (mode === 'SEMI_AUTO') {
+      filtered = requests.filter(
+        (request) =>
+          request.requestType === SwapRequestType.PAIRED &&
+          request.status === SwapRequestStatus.PENDING &&
+          !request.partnerConfirmed,
+      );
+    } else {
+      filtered = visibleRequests.filter(
+        (request) => request.status === SwapRequestStatus.AUTO_RESOLVED,
       );
     }
 
-    return requests.filter((r) => r.status === SwapRequestStatus.AUTO_RESOLVED);
+    const enriched = await Promise.all(
+      filtered.map((request) => this.enrichSwapRequestWithStudent(request)),
+    );
+
+    return enriched.map((request) => ({
+      ...request,
+      processingMode: this.getProcessingMode(request),
+    }));
   }
 
   async approveRequest(requestId: string) {
@@ -392,21 +411,32 @@ export class SwapRequestService {
       throw new BadRequestException('Request is not pending');
     }
 
-    const hasCapacity = await this.groupRepo.hasCapacity(
-      request.desiredGroupId,
-    );
-    if (!hasCapacity) throw new BadRequestException('Desired group is full');
+    if (request.requestType === SwapRequestType.PAIRED) {
+      if (!request.partnerConfirmed) {
+        throw new BadRequestException(
+          'Paired request is waiting for partner confirmation',
+        );
+      }
+      await this.executePairedSwap(request);
+    } else {
+      const hasCapacity = await this.groupRepo.hasCapacity(
+        request.desiredGroupId,
+      );
+      if (!hasCapacity) throw new BadRequestException('Desired group is full');
 
-    await this.executeSwap(
-      request.studentId,
-      request.currentGroupId,
-      request.desiredGroupId,
-    );
+      await this.executeSwap(
+        request.studentId,
+        request.currentGroupId,
+        request.desiredGroupId,
+      );
+    }
 
-    return this.swapRequestRepo.update(requestId, {
+    const updated = await this.swapRequestRepo.update(requestId, {
       status: SwapRequestStatus.APPROVED,
       satisfiedWish: true,
     });
+
+    return this.enrichSwapRequestWithStudent(updated);
   }
 
   async rejectRequest(requestId: string, dto: RejectSwapRequestDto) {
@@ -416,39 +446,81 @@ export class SwapRequestService {
       throw new BadRequestException('Request is not pending');
     }
 
-    return this.swapRequestRepo.update(requestId, {
+    const updated = await this.swapRequestRepo.update(requestId, {
       status: SwapRequestStatus.REJECTED,
       satisfiedWish: false,
       reason: dto.reason ?? request.reason,
     });
+
+    return this.enrichSwapRequestWithStudent(updated);
   }
 
   async tryAutoProcess(requestId: string) {
     const request = await this.swapRequestRepo.findById(requestId);
     if (!request || request.status !== SwapRequestStatus.PENDING) return;
 
-    const match = await this.swapRequestRepo.findMatchingRequest(request);
-    if (!match) return;
+    if (
+      request.requestType !== SwapRequestType.PAIRED ||
+      !request.partnerConfirmed
+    ) {
+      return;
+    }
+
+    const course = await this.courseRepo.findById(request.courseId);
+    if (course?.swapMode !== SwapMode.AUTO) {
+      return;
+    }
+
+    await this.executePairedSwap(request);
+
+    await this.swapRequestRepo.update(request.id, {
+      status: SwapRequestStatus.AUTO_RESOLVED,
+      satisfiedWish: true,
+    });
+  }
+
+  private async resolvePartnerStudentId(request: SwapRequest) {
+    if (request.partnerStudentId) {
+      return request.partnerStudentId;
+    }
+
+    if (!request.partnerEmail) {
+      throw new BadRequestException('Paired request is missing partner email');
+    }
+
+    const partner = await this.userRepo.findByEmail(request.partnerEmail);
+    if (!partner || partner.role !== UserRole.STUDENT) {
+      throw new NotFoundException('Partner student not found');
+    }
+
+    return partner.id;
+  }
+
+  private async executePairedSwap(request: SwapRequest) {
+    const partnerStudentId = await this.resolvePartnerStudentId(request);
+    const partnerGroups =
+      await this.studentGroupRepo.findByStudent(partnerStudentId);
+    const partnerCurrentGroup = partnerGroups.find(
+      (group) => group.groupId === request.desiredGroupId,
+    );
+
+    if (!partnerCurrentGroup) {
+      throw new BadRequestException(
+        'Partner is not assigned to the desired group',
+      );
+    }
 
     await this.executeSwap(
       request.studentId,
       request.currentGroupId,
       request.desiredGroupId,
     );
-    await this.executeSwap(
-      match.studentId,
-      match.currentGroupId,
-      match.desiredGroupId,
-    );
 
-    await this.swapRequestRepo.update(request.id, {
-      status: SwapRequestStatus.AUTO_RESOLVED,
-      satisfiedWish: true,
-    });
-    await this.swapRequestRepo.update(match.id, {
-      status: SwapRequestStatus.AUTO_RESOLVED,
-      satisfiedWish: true,
-    });
+    await this.executeSwap(
+      partnerStudentId,
+      request.desiredGroupId,
+      request.currentGroupId,
+    );
   }
 
   private async executeSwap(

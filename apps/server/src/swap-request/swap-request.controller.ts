@@ -5,8 +5,10 @@ import {
   Body,
   Param,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { SwapRequestService } from './swap-request.service';
 import type { CreateSwapRequestDto } from './dto/create-swap-request.dto';
 import type { RejectSwapRequestDto } from './dto/reject-swap-request.dto';
@@ -17,11 +19,11 @@ import { AuthGuard, RolesGuard, Roles } from '../auth';
 export class SwapRequestController {
   constructor(private readonly swapRequestService: SwapRequestService) {}
 
-  // ─── STUDENT ────────────────────────────────────────────────
-
   @Get('student/requests')
   @Roles('STUDENT')
-  async getMyRequests(@Param('studentId') studentId: string) {
+  async getMyRequests(@Req() request: Request) {
+    const studentId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
     const data = await this.swapRequestService.getMyRequests(studentId);
     return { data, error: null, message: 'OK' };
   }
@@ -36,9 +38,11 @@ export class SwapRequestController {
   @Post('student/requests')
   @Roles('STUDENT')
   async createRequest(
-    @Param('studentId') studentId: string,
+    @Req() request: Request,
     @Body() dto: CreateSwapRequestDto,
   ) {
+    const studentId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
     const data = await this.swapRequestService.createRequest(studentId, dto);
     return { data, error: null, message: 'Request created' };
   }
@@ -46,9 +50,11 @@ export class SwapRequestController {
   @Post('student/requests/:id/confirm-partner')
   @Roles('STUDENT')
   async confirmPartner(
-    @Param('studentId') studentId: string,
+    @Req() request: Request,
     @Param('id') requestId: string,
   ) {
+    const studentId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
     const data = await this.swapRequestService.confirmPartner(
       requestId,
       studentId,
@@ -56,13 +62,11 @@ export class SwapRequestController {
     return { data, error: null, message: 'Partner confirmed' };
   }
 
-  // ─── PROFESSOR ──────────────────────────────────────────────
-
   @Get('professor/requests')
   @Roles('PROFESSOR')
   async getCourseRequests(
-    @Query('courseId') courseId: string,
-    @Query('mode') mode: 'MANUAL' | 'SEMI_AUTO' | 'AUTO',
+    @Query('courseId') courseId?: string,
+    @Query('mode') mode: 'MANUAL' | 'SEMI_AUTO' | 'AUTO' = 'MANUAL',
   ) {
     const data = await this.swapRequestService.getCourseRequests(
       courseId,
@@ -72,14 +76,14 @@ export class SwapRequestController {
   }
 
   @Post('professor/requests/:id/approve')
-  @Roles('PROFESSOR')
+  @Roles('PROFESSOR', 'ADMIN')
   async approveRequest(@Param('id') id: string) {
     const data = await this.swapRequestService.approveRequest(id);
     return { data, error: null, message: 'Request approved' };
   }
 
   @Post('professor/requests/:id/reject')
-  @Roles('PROFESSOR')
+  @Roles('PROFESSOR', 'ADMIN')
   async rejectRequest(
     @Param('id') id: string,
     @Body() dto: RejectSwapRequestDto,

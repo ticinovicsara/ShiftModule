@@ -15,6 +15,13 @@ export const mockUsers: User[] = [
     lastName: 'Horvat',
     role: UserRole.PROFESSOR,
   },
+  {
+    id: 'user-professor-2',
+    email: 'profesor@fesb.hr',
+    firstName: 'Marko',
+    lastName: 'Kovacic',
+    role: UserRole.PROFESSOR,
+  },
   ...Array.from({ length: 10 }).map((_, index) => {
     const i = index + 1;
     return {
@@ -26,4 +33,3 @@ export const mockUsers: User[] = [
     } satisfies User;
   }),
 ];
-

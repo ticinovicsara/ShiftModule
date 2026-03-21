@@ -5,6 +5,8 @@ import { MockSwapRequestRepository } from '../repositories/mock/mock-swap-reques
 import { MockStudentGroupRepository } from '../repositories/mock/mock-student-group.repository';
 import { MockGroupRepository } from '../repositories/mock/mock-group.repository';
 import { MockStudentCourseRepository } from '../repositories/mock/mock-student-course.repository';
+import { MockCourseRepository } from '../repositories/mock/mock-course.repository';
+import { MockUserRepository } from '../repositories/mock/mock-user.repository';
 
 @Module({
   controllers: [SwapRequestController],
@@ -14,6 +16,12 @@ import { MockStudentCourseRepository } from '../repositories/mock/mock-student-c
     MockStudentGroupRepository,
     MockGroupRepository,
     MockStudentCourseRepository,
+    MockCourseRepository,
+    MockUserRepository,
+    {
+      provide: 'UserRepository',
+      useClass: MockUserRepository,
+    },
   ],
   exports: [SwapRequestService],
 })
