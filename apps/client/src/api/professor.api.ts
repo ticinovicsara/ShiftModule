@@ -9,8 +9,7 @@ import { API_ENDPOINTS } from "../constants";
 
 export const professorApi = {
   courses: {
-    getAll: () =>
-      client.get<Course | Course[]>(API_ENDPOINTS.professor.courses),
+    getAll: () => client.get<Course[]>(API_ENDPOINTS.professor.courses),
     getById: (id: string) =>
       client.get<Course>(API_ENDPOINTS.professor.courseById(id)),
     setSwapMode: (id: string, mode: { mode: Course["swapMode"] }) =>

@@ -12,11 +12,26 @@ import { useFetch } from "./useFetch";
 import { useMutation } from "./useMutation";
 
 async function fetchByRole(role: UserRole | null) {
+  if (role === Role.ADMIN) {
+    return swapRequestApi.admin.getAll();
+  }
+
   if (role === Role.PROFESSOR) {
-    return swapRequestApi.professor.getByCourse({
-      courseId: "",
-      mode: SwapMode.MANUAL,
+    const [manual, automatic] = await Promise.all([
+      swapRequestApi.professor.getByCourse({
+        mode: SwapMode.MANUAL,
+      }),
+      swapRequestApi.professor.getByCourse({
+        mode: SwapMode.AUTO,
+      }),
+    ]);
+
+    const merged = new Map<string, SwapRequest>();
+    [...manual, ...automatic].forEach((request) => {
+      merged.set(request.id, request);
     });
+
+    return Array.from(merged.values());
   }
 
   return swapRequestApi.student.getAll();

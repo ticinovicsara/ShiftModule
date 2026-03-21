@@ -4,3 +4,4 @@ export * from "./client";
 export * from "./professor.api";
 export * from "./student.api";
 export * from "./swap-request.api";
+export * from "./users.api";

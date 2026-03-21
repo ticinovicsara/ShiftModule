@@ -1,11 +1,28 @@
 import type { Course, CreateCourseDto, UpdateCourseDto } from "@repo/types";
-import { useCallback, useMemo } from "react";
+import { UserRole } from "@repo/types";
+import { useCallback, useContext, useMemo } from "react";
 import { adminApi, professorApi, studentApi } from "../api";
+import { AuthContext } from "../context/AuthContext";
 import { useFetch } from "./useFetch";
 import { useMutation } from "./useMutation";
 
 export function useCourses() {
-  const fetchAll = useCallback(() => adminApi.courses.getAll(), []);
+  const auth = useContext(AuthContext);
+  if (!auth) {
+    throw new Error("useCourses must be used within AuthProvider");
+  }
+
+  const fetchAll = useCallback(async () => {
+    if (auth.role === UserRole.PROFESSOR) {
+      return professorApi.courses.getAll();
+    }
+
+    if (auth.role === UserRole.STUDENT) {
+      return studentApi.getCourses();
+    }
+
+    return adminApi.courses.getAll();
+  }, [auth.role]);
   const { data, loading, error, refetch } = useFetch<Course[]>(fetchAll, [
     fetchAll,
   ]);

@@ -5,13 +5,26 @@ import type {
   UpdateGroupCapacityDto,
   UpdateGroupDto,
 } from "@repo/types";
-import { useCallback, useMemo } from "react";
+import { UserRole as Role } from "@repo/types";
+import { useCallback, useContext, useMemo } from "react";
 import { adminApi, professorApi } from "../api";
+import { AuthContext } from "../context/AuthContext";
 import { useFetch } from "./useFetch";
 import { useMutation } from "./useMutation";
 
 export function useGroups() {
-  const fetchAll = useCallback(() => adminApi.groups.getAll(), []);
+  const auth = useContext(AuthContext);
+  if (!auth) {
+    throw new Error("useGroups must be used within AuthProvider");
+  }
+
+  const fetchAll = useCallback(async () => {
+    if (auth.role !== Role.ADMIN) {
+      return [] as Group[];
+    }
+
+    return adminApi.groups.getAll();
+  }, [auth.role]);
   const { data, loading, error, refetch } = useFetch<Group[]>(fetchAll, [
     fetchAll,
   ]);

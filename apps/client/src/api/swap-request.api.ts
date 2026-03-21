@@ -8,6 +8,9 @@ import { API_ENDPOINTS } from "../constants";
 import { client } from "./client";
 
 export const swapRequestApi = {
+  admin: {
+    getAll: () => client.get<SwapRequest[]>(API_ENDPOINTS.admin.swapRequests),
+  },
   student: {
     getAll: () => client.get<SwapRequest[]>(API_ENDPOINTS.student.swapRequests),
     create: (dto: CreateSwapRequestDto) =>

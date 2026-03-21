@@ -6,4 +6,5 @@ export * from "./useMutation";
 export * from "./useSessionTypes";
 export * from "./useStudents";
 export * from "./useStudyMajors";
+export * from "./useRequestDisplayData";
 export * from "./useSwapRequests";
