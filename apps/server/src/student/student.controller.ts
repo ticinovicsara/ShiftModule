@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
 import type { Request } from 'express';
@@ -14,6 +14,28 @@ export class StudentController {
     const studentId = (request as Request & { user?: { id?: string } }).user
       ?.id;
     const data = await this.studentService.getMyCourses(studentId ?? '');
+    return { data, error: null, message: 'OK' };
+  }
+
+  @Get('course-overviews')
+  async getCourseOverviews(@Req() request: Request) {
+    const studentId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
+    const data = await this.studentService.getCourseOverviews(studentId ?? '');
+    return { data, error: null, message: 'OK' };
+  }
+
+  @Get('courses/:courseId')
+  async getCourseDetail(
+    @Req() request: Request,
+    @Param('courseId') courseId: string,
+  ) {
+    const studentId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
+    const data = await this.studentService.getCourseDetail(
+      studentId ?? '',
+      courseId,
+    );
     return { data, error: null, message: 'OK' };
   }
 

@@ -20,7 +20,7 @@ export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
   @Get('admin/groups')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'PROFESSOR')
   async findAll() {
     const data = await this.groupService.findAll();
     return { data, error: null, message: 'OK' };
@@ -34,7 +34,7 @@ export class GroupController {
   }
 
   @Patch('admin/groups/:id/capacity')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'PROFESSOR')
   async updateCapacity(
     @Param('id') id: string,
     @Body() body: { capacity: number },
@@ -62,5 +62,15 @@ export class GroupController {
   async reportIssue(@Param('id') id: string, @Body() dto: ReportIssueDto) {
     const data = await this.groupService.reportIssue(id, dto);
     return { data, error: null, message: 'Issue reported' };
+  }
+
+  @Post('admin/students/:studentId/move-to-group/:groupId')
+  @Roles('ADMIN', 'PROFESSOR')
+  async moveStudentToGroup(
+    @Param('studentId') studentId: string,
+    @Param('groupId') groupId: string,
+  ) {
+    const data = await this.groupService.moveStudentToGroup(studentId, groupId);
+    return { data, error: null, message: data.message };
   }
 }

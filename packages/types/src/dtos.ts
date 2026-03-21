@@ -43,12 +43,14 @@ export interface UpdateStudyMajorDto {
 export interface CreateCourseDto {
   title: string;
   studyMajorId: string;
+  merlinUrl?: string;
 }
 
 export interface UpdateCourseDto {
   title?: string;
   studyMajorId?: string;
   professorId?: string;
+  merlinUrl?: string;
   swapMode?: SwapMode;
 }
 

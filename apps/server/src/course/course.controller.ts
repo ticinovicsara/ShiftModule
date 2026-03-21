@@ -52,6 +52,13 @@ export class CourseController {
     return { data, error: null, message: 'Professor assigned' };
   }
 
+  @Get('admin/courses/:id')
+  @Roles('ADMIN')
+  async findOneForAdmin(@Param('id') id: string) {
+    const data = await this.courseService.getCourseDetail(id);
+    return { data, error: null, message: 'OK' };
+  }
+
   @Delete('admin/courses/:id')
   @Roles('ADMIN')
   async remove(@Param('id') id: string) {
@@ -73,7 +80,18 @@ export class CourseController {
   @Get('professor/courses/:id')
   @Roles('PROFESSOR')
   async findOne(@Param('id') id: string) {
-    const data = await this.courseService.findWithActivityTypes(id);
+    const data = await this.courseService.getCourseDetail(id);
+    return { data, error: null, message: 'OK' };
+  }
+
+  @Get('professor/dashboard/stats')
+  @Roles('PROFESSOR')
+  async getProfessorDashboardStats(@Req() request: Request) {
+    const professorId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
+    const data = await this.courseService.getProfessorDashboardStats(
+      professorId ?? '',
+    );
     return { data, error: null, message: 'OK' };
   }
 

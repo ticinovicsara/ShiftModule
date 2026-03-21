@@ -29,6 +29,11 @@ export interface Group {
   currentCount: number;
   isActive: boolean;
   sessionTypeId: string;
+  schedule?: {
+    day: string;
+    time: string;
+    room: string;
+  };
 }
 
 export interface SessionType {
@@ -42,6 +47,7 @@ export interface Course {
   title: string;
   professorId?: string;
   studyMajorId: string;
+  merlinUrl?: string;
   swapMode?: SwapMode;
 }
 

@@ -7,6 +7,7 @@ import {
   MockSwapRequestRepository,
   MockCourseRepository,
   MockGroupRepository,
+  MockSessionTypeRepository,
 } from '../repositories';
 
 @Module({
@@ -18,6 +19,7 @@ import {
     MockSwapRequestRepository,
     MockCourseRepository,
     MockGroupRepository,
+    MockSessionTypeRepository,
   ],
 })
 export class StudentModule {}

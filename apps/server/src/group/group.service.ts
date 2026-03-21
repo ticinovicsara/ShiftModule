@@ -2,15 +2,23 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
-import { MockGroupRepository } from '../repositories/mock/mock-group.repository';
+import {
+  MockGroupRepository,
+  MockStudentGroupRepository,
+} from '../repositories';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { ReportIssueDto } from './dto/report-issue.dto';
 
 @Injectable()
 export class GroupService {
-  constructor(private readonly groupRepo: MockGroupRepository) {}
+  constructor(
+    private readonly groupRepo: MockGroupRepository,
+    @Inject(MockStudentGroupRepository)
+    private readonly studentGroupRepo: MockStudentGroupRepository,
+  ) {}
 
   async findAll() {
     return this.groupRepo.findMany();
@@ -68,6 +76,42 @@ export class GroupService {
       `IT REPORT → Group ${id}: ${dto.reason} - ${dto.description ?? ''}`,
     );
     return { message: 'Issue reported to IT department' };
+  }
+
+  async moveStudentToGroup(
+    studentId: string,
+    newGroupId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    // Verify the target group exists
+    await this.findById(newGroupId);
+
+    // Find the student's current group assignment
+    const studentGroups = await this.studentGroupRepo.findByStudent(studentId);
+    if (!studentGroups || studentGroups.length === 0) {
+      throw new NotFoundException(
+        `Student ${studentId} is not assigned to any group`,
+      );
+    }
+
+    // For simplicity, move the first assignment (typically there's only one per course)
+    const studentGroup = studentGroups[0];
+    const oldGroupId = studentGroup.groupId;
+
+    // If already in the target group, no-op
+    if (oldGroupId === newGroupId) {
+      return { success: true, message: 'Student is already in target group' };
+    }
+
+    // Update the student's group assignment
+    await this.studentGroupRepo.update(studentGroup.id, {
+      groupId: newGroupId,
+    });
+
+    // Decrement count in old group, increment in new group
+    await this.decrementCount(oldGroupId);
+    await this.incrementCount(newGroupId);
+
+    return { success: true, message: 'Student moved successfully' };
   }
 
   async remove(id: string) {

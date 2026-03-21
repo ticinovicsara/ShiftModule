@@ -62,6 +62,21 @@ export class SwapRequestController {
     return { data, error: null, message: 'Partner confirmed' };
   }
 
+  @Post('student/requests/:id/decline-partner')
+  @Roles('STUDENT')
+  async declinePartner(
+    @Req() request: Request,
+    @Param('id') requestId: string,
+  ) {
+    const studentId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
+    const data = await this.swapRequestService.declinePartner(
+      requestId,
+      studentId,
+    );
+    return { data, error: null, message: 'Partner declined' };
+  }
+
   @Get('professor/requests')
   @Roles('PROFESSOR')
   async getCourseRequests(

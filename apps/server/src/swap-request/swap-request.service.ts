@@ -54,7 +54,9 @@ export class SwapRequestService {
     if (!this.isPaired(request)) {
       return true;
     }
-    return request.partnerConfirmed;
+    return (
+      request.partnerConfirmed || request.status === SwapRequestStatus.REJECTED
+    );
   }
 
   private getProcessingMode(request: SwapRequest): 'MANUAL' | 'AUTOMATIC' {
@@ -228,12 +230,13 @@ export class SwapRequestService {
       await this.swapRequestRepo.findByStudent(resolvedStudentId);
     const hasPending = existing.some(
       (r) =>
+        r.courseId === dto.courseId &&
         r.sessionTypeId === dto.sessionTypeId &&
         r.status === SwapRequestStatus.PENDING,
     );
     if (hasPending) {
       throw new ConflictException(
-        'Already has pending request for this activity',
+        'Already has pending request for this session type',
       );
     }
 
@@ -364,6 +367,48 @@ export class SwapRequestService {
     return { message: 'Partner confirmed' };
   }
 
+  async declinePartner(requestId: string, studentId?: string) {
+    const resolvedStudentId = this.requireStudentId(studentId);
+    const request = await this.swapRequestRepo.findById(requestId);
+    if (!request) throw new NotFoundException('Request not found');
+
+    if (request.status !== SwapRequestStatus.PENDING) {
+      throw new BadRequestException('Request is no longer pending');
+    }
+
+    if (request.requestType !== SwapRequestType.PAIRED) {
+      throw new BadRequestException(
+        'Only paired requests support partner decline',
+      );
+    }
+
+    if (request.partnerConfirmed) {
+      throw new BadRequestException('Request is already partner-confirmed');
+    }
+
+    const partner = await this.userRepo.findById(resolvedStudentId);
+    if (!partner) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (
+      this.normalizeEmail(request.partnerEmail) !==
+      this.normalizeEmail(partner.email)
+    ) {
+      throw new BadRequestException(
+        'Only invited partner can decline this request',
+      );
+    }
+
+    const updated = await this.swapRequestRepo.update(requestId, {
+      status: SwapRequestStatus.REJECTED,
+      satisfiedWish: false,
+      reason: 'Partner declined the swap request',
+    });
+
+    return this.enrichSwapRequestWithStudent(updated);
+  }
+
   async getCourseRequests(
     courseId: string | undefined,
     mode: 'MANUAL' | 'SEMI_AUTO' | 'AUTO',
@@ -379,10 +424,10 @@ export class SwapRequestService {
     let filtered: SwapRequest[] = [];
     if (mode === 'MANUAL') {
       filtered = visibleRequests.filter(
-        (request) => request.status === SwapRequestStatus.PENDING,
+        (request) => request.status !== SwapRequestStatus.AUTO_RESOLVED,
       );
     } else if (mode === 'SEMI_AUTO') {
-      filtered = requests.filter(
+      filtered = visibleRequests.filter(
         (request) =>
           request.requestType === SwapRequestType.PAIRED &&
           request.status === SwapRequestStatus.PENDING &&
@@ -407,28 +452,41 @@ export class SwapRequestService {
   async approveRequest(requestId: string) {
     const request = await this.swapRequestRepo.findById(requestId);
     if (!request) throw new NotFoundException('Request not found');
-    if (request.status !== SwapRequestStatus.PENDING) {
-      throw new BadRequestException('Request is not pending');
+
+    if (request.status === SwapRequestStatus.AUTO_RESOLVED) {
+      throw new BadRequestException(
+        'Automatically resolved request cannot change status',
+      );
     }
 
-    if (request.requestType === SwapRequestType.PAIRED) {
-      if (!request.partnerConfirmed) {
-        throw new BadRequestException(
-          'Paired request is waiting for partner confirmation',
+    if (request.status === SwapRequestStatus.APPROVED) {
+      return this.enrichSwapRequestWithStudent(request);
+    }
+
+    const shouldExecuteSwap =
+      request.status === SwapRequestStatus.PENDING || !request.satisfiedWish;
+
+    if (shouldExecuteSwap) {
+      if (request.requestType === SwapRequestType.PAIRED) {
+        if (!request.partnerConfirmed) {
+          throw new BadRequestException(
+            'Paired request is waiting for partner confirmation',
+          );
+        }
+        await this.executePairedSwap(request);
+      } else {
+        const hasCapacity = await this.groupRepo.hasCapacity(
+          request.desiredGroupId,
+        );
+        if (!hasCapacity)
+          throw new BadRequestException('Desired group is full');
+
+        await this.executeSwap(
+          request.studentId,
+          request.currentGroupId,
+          request.desiredGroupId,
         );
       }
-      await this.executePairedSwap(request);
-    } else {
-      const hasCapacity = await this.groupRepo.hasCapacity(
-        request.desiredGroupId,
-      );
-      if (!hasCapacity) throw new BadRequestException('Desired group is full');
-
-      await this.executeSwap(
-        request.studentId,
-        request.currentGroupId,
-        request.desiredGroupId,
-      );
     }
 
     const updated = await this.swapRequestRepo.update(requestId, {
@@ -442,8 +500,15 @@ export class SwapRequestService {
   async rejectRequest(requestId: string, dto: RejectSwapRequestDto) {
     const request = await this.swapRequestRepo.findById(requestId);
     if (!request) throw new NotFoundException('Request not found');
+
+    if (request.status === SwapRequestStatus.AUTO_RESOLVED) {
+      throw new BadRequestException(
+        'Automatically resolved request cannot change status',
+      );
+    }
+
     if (request.status !== SwapRequestStatus.PENDING) {
-      throw new BadRequestException('Request is not pending');
+      throw new BadRequestException('Only pending requests can be rejected');
     }
 
     const updated = await this.swapRequestRepo.update(requestId, {
