@@ -26,6 +26,25 @@ export interface NavigationItem {
 
 const unresolvedPath = ROUTE_PATHS.notFound;
 
+const studentNavigationItems: NavigationItem[] = [
+  {
+    label: LABELS.nav.home,
+    path: ROUTE_PATHS.student.courses,
+    icon: "home",
+  },
+  {
+    label: LABELS.nav.courses,
+    path: ROUTE_PATHS.student.courses,
+    icon: "courses",
+  },
+  {
+    label: LABELS.nav.notifications,
+    path: unresolvedPath,
+    icon: "notifications",
+  },
+  { label: LABELS.nav.profile, path: unresolvedPath, icon: "profile" },
+];
+
 export const NAVIGATION_CONFIG: Record<
   UserRole,
   Record<NavigationViewport, NavigationItem[]>
@@ -144,41 +163,7 @@ export const NAVIGATION_CONFIG: Record<
     ],
   },
   [UserRole.STUDENT]: {
-    mobile: [
-      {
-        label: LABELS.nav.home,
-        path: ROUTE_PATHS.student.courses,
-        icon: "home",
-      },
-      {
-        label: LABELS.nav.courses,
-        path: ROUTE_PATHS.student.courses,
-        icon: "courses",
-      },
-      {
-        label: LABELS.nav.notifications,
-        path: unresolvedPath,
-        icon: "notifications",
-      },
-      { label: LABELS.nav.profile, path: unresolvedPath, icon: "profile" },
-    ],
-    desktop: [
-      {
-        label: LABELS.nav.home,
-        path: ROUTE_PATHS.student.courses,
-        icon: "home",
-      },
-      {
-        label: LABELS.nav.courses,
-        path: ROUTE_PATHS.student.courses,
-        icon: "courses",
-      },
-      {
-        label: LABELS.nav.notifications,
-        path: unresolvedPath,
-        icon: "notifications",
-      },
-      { label: LABELS.nav.profile, path: unresolvedPath, icon: "profile" },
-    ],
+    mobile: studentNavigationItems,
+    desktop: studentNavigationItems,
   },
 };

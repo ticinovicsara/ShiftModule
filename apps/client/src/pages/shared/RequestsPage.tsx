@@ -1,8 +1,9 @@
-import { SwapRequestStatus } from "@repo/types";
-import { useState } from "react";
+import { SwapRequestStatus, UserRole } from "@repo/types";
+import { useContext, useState } from "react";
 import { FilterTabs, SwapRequestCard } from "../../components/shared";
 import { Button, EmptyState, ErrorState, Spinner } from "../../components/ui";
 import { LABELS } from "../../constants";
+import { AuthContext } from "../../context/AuthContext";
 import {
   useCourses,
   useRequestDisplayData,
@@ -18,18 +19,29 @@ const defaultTabs = [
 ];
 
 interface RequestsPageProps {
-  rejectReason: string;
+  rejectReason?: string;
   tabs?: { label: string; value: string }[];
 }
+
+const REJECT_REASON_BY_ROLE: Partial<Record<UserRole, string>> = {
+  [UserRole.ADMIN]: "Odbijeno od admina",
+  [UserRole.PROFESSOR]: "Odbijeno od profesora",
+};
 
 export function RequestsPage({
   rejectReason,
   tabs = defaultTabs,
 }: RequestsPageProps) {
+  const auth = useContext(AuthContext);
   const { data, loading, error, approve, reject, refetch } = useSwapRequests();
   const { data: courses } = useCourses();
   const [activeTab, setActiveTab] = useState("all");
   const [actionId, setActionId] = useState<string | null>(null);
+
+  const resolvedRejectReason =
+    rejectReason ??
+    (auth?.user ? REJECT_REASON_BY_ROLE[auth.user.role] : undefined) ??
+    "Odbijeno";
 
   const { cardRequests, hasMissingDisplayData, usersLoading, usersError } =
     useRequestDisplayData({
@@ -51,7 +63,7 @@ export function RequestsPage({
   const handleReject = async (requestId: string) => {
     setActionId(requestId);
     try {
-      await reject({ id: requestId, dto: { reason: rejectReason } });
+      await reject({ id: requestId, dto: { reason: resolvedRejectReason } });
       await refetch();
     } finally {
       setActionId(null);

@@ -6,15 +6,11 @@ import { AuthLayout } from "../layouts/AuthLayout";
 import {
   LoginPage,
   AdminDashboardPage,
-  AdminRequestsPage,
-  AdminSettingsPage,
   AdminStudentsPage,
   AdminImportPage,
   AdminCoursesPage,
   AdminCourseDetailPage,
   ProfessorCoursesPage,
-  ProfessorRequestsPage,
-  ProfessorSettingsPage,
   ProfessorCourseDetailPage,
   ProfessorRequestDetailPage,
   ProfessorAutoLogPage,
@@ -23,7 +19,8 @@ import {
   StudentSwapStep1Page,
   StudentSwapStep2Page,
   StudentRequestsPage,
-  StudentSettingsPage,
+  RequestsPage,
+  SettingsPage,
   ConfirmSwapPage,
   UnauthorizedPage,
   NotFoundPage,
@@ -47,10 +44,7 @@ export function AppRouter() {
             path={ROUTE_PATHS.admin.students}
             element={<AdminStudentsPage />}
           />
-          <Route
-            path={ROUTE_PATHS.admin.requests}
-            element={<AdminRequestsPage />}
-          />
+          <Route path={ROUTE_PATHS.admin.requests} element={<RequestsPage />} />
           <Route
             path={ROUTE_PATHS.admin.studentsImport}
             element={<AdminImportPage />}
@@ -75,10 +69,7 @@ export function AppRouter() {
             path={ROUTE_PATHS.routePatterns.adminAutoAssign}
             element={<AdminCourseDetailPage />}
           />
-          <Route
-            path={ROUTE_PATHS.admin.settings}
-            element={<AdminSettingsPage />}
-          />
+          <Route path={ROUTE_PATHS.admin.settings} element={<SettingsPage />} />
         </Route>
       </Route>
 
@@ -90,7 +81,7 @@ export function AppRouter() {
           />
           <Route
             path={ROUTE_PATHS.professor.requests}
-            element={<ProfessorRequestsPage />}
+            element={<RequestsPage />}
           />
           <Route
             path={ROUTE_PATHS.professor.courses}
@@ -118,7 +109,7 @@ export function AppRouter() {
           />
           <Route
             path={ROUTE_PATHS.professor.settings}
-            element={<ProfessorSettingsPage />}
+            element={<SettingsPage />}
           />
         </Route>
       </Route>
@@ -151,7 +142,7 @@ export function AppRouter() {
           />
           <Route
             path={ROUTE_PATHS.student.settings}
-            element={<StudentSettingsPage />}
+            element={<SettingsPage />}
           />
         </Route>
       </Route>
