@@ -1,11 +1,12 @@
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import { UserRole } from '@repo/types';
 import { StudentService } from './student.service';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
 import type { Request } from 'express';
 
 @Controller('student')
 @UseGuards(AuthGuard, RolesGuard)
-@Roles('STUDENT')
+@Roles(UserRole.STUDENT)
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 

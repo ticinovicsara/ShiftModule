@@ -8,6 +8,7 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
+import { UserRole } from '@repo/types';
 import { StudyMajorService } from './study-major.service';
 import type { CreateStudyMajorDto } from './dto/create-study-major.dto';
 import type { UpdateStudyMajorDto } from './dto/update-study-major.dto';
@@ -15,7 +16,7 @@ import { AuthGuard, RolesGuard, Roles } from '../auth';
 
 @Controller('admin/study-majors')
 @UseGuards(AuthGuard, RolesGuard)
-@Roles('ADMIN')
+@Roles(UserRole.ADMIN)
 export class StudyMajorController {
   constructor(private readonly studyMajorService: StudyMajorService) {}
 

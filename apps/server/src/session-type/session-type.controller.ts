@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SessionTypeService } from './session-type.service';
+import { UserRole } from '@repo/types';
 import type { CreateSessionTypeDto } from './dto/create-session-type.dto';
 import type { UpdateSessionTypeDto } from './dto/update-session-type.dto';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
@@ -19,35 +20,35 @@ export class SessionTypeController {
   constructor(private readonly sessionTypeService: SessionTypeService) {}
 
   @Get()
-  @Roles('ADMIN', 'PROFESSOR')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
   async findAll() {
     const data = await this.sessionTypeService.findAll();
     return { data, error: null, message: 'OK' };
   }
 
   @Get('course/:courseId')
-  @Roles('ADMIN', 'PROFESSOR')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
   async findByCourse(@Param('courseId') courseId: string) {
     const data = await this.sessionTypeService.findByCourse(courseId);
     return { data, error: null, message: 'OK' };
   }
 
   @Post()
-  @Roles('ADMIN')
+  @Roles(UserRole.ADMIN)
   async create(@Body() dto: CreateSessionTypeDto) {
     const data = await this.sessionTypeService.create(dto);
     return { data, error: null, message: 'Session type created' };
   }
 
   @Patch(':id')
-  @Roles('ADMIN')
+  @Roles(UserRole.ADMIN)
   async update(@Param('id') id: string, @Body() dto: UpdateSessionTypeDto) {
     const data = await this.sessionTypeService.update(id, dto);
     return { data, error: null, message: 'Session type updated' };
   }
 
   @Delete(':id')
-  @Roles('ADMIN')
+  @Roles(UserRole.ADMIN)
   async remove(@Param('id') id: string) {
     const data = await this.sessionTypeService.remove(id);
     return { data, error: null, message: 'Session type deleted' };

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   MockStudentCourseRepository,
   MockStudentGroupRepository,
@@ -7,7 +7,7 @@ import {
   MockGroupRepository,
   MockSessionTypeRepository,
 } from '../repositories';
-import { SwapRequestStatus } from '@repo/types';
+import { SessionKind, SwapRequestStatus } from '@repo/types';
 
 @Injectable()
 export class StudentService {
@@ -71,19 +71,31 @@ export class StudentService {
     const enrollments = await this.studentCourseRepo.findByStudent(studentId);
     const enrollment = enrollments.find((entry) => entry.courseId === courseId);
     if (!enrollment) {
-      return null;
+      throw new NotFoundException('Course enrollment not found');
     }
 
     const course = await this.courseRepo.findById(courseId);
     const sessionTypes = await this.sessionTypeRepo.findByCourse(courseId);
     const groups = await this.getGroupsForCourse(courseId);
     const studentGroups = await this.studentGroupRepo.findByStudent(studentId);
-    const currentStudentGroup = studentGroups.find((studentGroup) =>
+    const currentStudentGroups = studentGroups.filter((studentGroup) =>
       groups.some((group) => group.id === studentGroup.groupId),
     );
-    const currentGroup = groups.find(
-      (group) => group.id === currentStudentGroup?.groupId,
+    const currentGroups = groups.filter((group) =>
+      currentStudentGroups.some(
+        (studentGroup) => studentGroup.groupId === group.id,
+      ),
     );
+    const currentGroup = currentGroups[0] ?? null;
+
+    const sessionTypeKindById = new Map(
+      sessionTypes.map((sessionType) => [sessionType.id, sessionType.type]),
+    );
+    const groupsWithKind = groups.map((group) => ({
+      ...group,
+      sessionKind:
+        sessionTypeKindById.get(group.sessionTypeId) ?? SessionKind.LAB,
+    }));
 
     const requests = await this.swapRequestRepo.findByStudent(studentId);
     const requestsForCourse = requests.filter(
@@ -94,7 +106,8 @@ export class StudentService {
       course,
       sessionTypes,
       currentGroup,
-      groups,
+      currentGroups,
+      groups: groupsWithKind,
       hasPendingRequest: requestsForCourse.some(
         (request) => request.status === SwapRequestStatus.PENDING,
       ),

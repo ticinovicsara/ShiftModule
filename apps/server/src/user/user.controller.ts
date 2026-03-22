@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
+import { UserRole } from '@repo/types';
 import { UserService } from './user.service';
 import type { CreateUserDto } from './dto/create-user.dto';
 import type { UpdateUserDto } from './dto/update-user.dto';
@@ -16,7 +17,7 @@ import { AuthGuard, RolesGuard, Roles } from '../auth';
 
 @Controller('admin/users')
 @UseGuards(AuthGuard, RolesGuard)
-@Roles('ADMIN')
+@Roles(UserRole.ADMIN)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
