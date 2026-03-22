@@ -1,4 +1,5 @@
 export * from "./useCourses";
+export * from "./useCourseManagementActions";
 export * from "./useDashboardStats";
 export * from "./useFetch";
 export * from "./useGroups";
