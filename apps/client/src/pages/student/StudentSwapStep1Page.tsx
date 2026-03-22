@@ -11,195 +11,312 @@ import { LABELS } from "../../constants/labels";
 function formatGroupSchedule(group: {
   schedule?: { day: string; time: string; room: string };
 }) {
-  if (!group.schedule) {
-    return "Termin nije definiran";
-  }
-
+  if (!group.schedule) return "Termin nije definiran";
   return `${group.schedule.day} ${group.schedule.time}, ${group.schedule.room}`;
 }
 
 export function StudentSwapStep1Page() {
   const navigate = useNavigate();
   const params = useParams<{ id: string }>();
-  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [selectedSessionTypeId, setSelectedSessionTypeId] =
     useState<string>("");
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
 
   const fetchDetail = useCallback(() => {
     if (!params.id) throw new Error("Course id is missing");
     return studentApi.getCourseById(params.id);
   }, [params.id]);
 
-  const { data, loading, error } = useFetch(fetchDetail, [fetchDetail]);
+  const { data, loading, error } = useFetch(fetchDetail);
+
+  const sessionTypes = data?.sessionTypes ?? [];
+  const currentGroups = data?.currentGroups ?? [];
+
+  const sessionTypeByKind = useMemo(() => {
+    const map = new Map<SessionKind, string>();
+    for (const st of sessionTypes) {
+      if (!map.has(st.type)) map.set(st.type, st.id);
+    }
+    return map;
+  }, [sessionTypes]);
 
   const sessionTypeById = useMemo(
-    () => new Map((data?.sessionTypes ?? []).map((type) => [type.id, type])),
-    [data?.sessionTypes],
+    () => new Map(sessionTypes.map((st) => [st.id, st])),
+    [sessionTypes],
   );
 
-  const selectedSessionType = sessionTypeById.get(selectedSessionTypeId);
+  const assignedKinds = useMemo(() => {
+    const assigned = new Set<SessionKind>();
+    for (const group of currentGroups) {
+      const st = sessionTypeById.get(group.sessionTypeId);
+      if (st) assigned.add(st.type);
+    }
+    return assigned;
+  }, [currentGroups, sessionTypeById]);
 
-  const groupsForSelectedType = useMemo(
-    () =>
-      (data?.groups ?? []).filter(
-        (group) => group.sessionTypeId === selectedSessionTypeId,
-      ),
-    [data?.groups, selectedSessionTypeId],
-  );
+  const getOptionState = (kind: SessionKind) => {
+    const sessionTypeId = sessionTypeByKind.get(kind) ?? null;
+    const enabled = Boolean(sessionTypeId && assignedKinds.has(kind));
+    return {
+      kind,
+      sessionTypeId,
+      enabled,
+      disabledLabel: enabled ? null : "Nije dostupno za ovaj kolegij",
+      title:
+        kind === SessionKind.LAB ? "Laboratorijske vježbe" : "Auditorne vježbe",
+    };
+  };
 
-  const currentGroupForSelectedType =
-    data?.currentGroup?.sessionTypeId === selectedSessionTypeId
-      ? data.currentGroup
-      : null;
+  const optionStates = [
+    getOptionState(SessionKind.LAB),
+    getOptionState(SessionKind.EXERCISE),
+  ];
 
+  // Auto-select first enabled session type
   useEffect(() => {
-    if (!data?.sessionTypes?.length) {
-      return;
-    }
+    if (selectedSessionTypeId) return;
+    const first = optionStates.find((o) => o.enabled);
+    if (first?.sessionTypeId) setSelectedSessionTypeId(first.sessionTypeId);
+  }, [optionStates, selectedSessionTypeId]);
 
-    const preferred =
-      data.sessionTypes.find((type) => type.type === SessionKind.LAB) ??
-      data.sessionTypes[0];
-
-    if (!selectedSessionTypeId) {
-      setSelectedSessionTypeId(preferred.id);
-    }
-  }, [data?.sessionTypes, selectedSessionTypeId]);
-
+  // Reset group selection when session type changes
   useEffect(() => {
     setSelectedGroupId("");
   }, [selectedSessionTypeId]);
 
+  const availableGroups = useMemo(
+    () =>
+      (data?.groups ?? []).filter(
+        (g) => g.sessionTypeId === selectedSessionTypeId,
+      ),
+    [data?.groups, selectedSessionTypeId],
+  );
+
+  const currentGroupForSelectedType = useMemo(
+    () =>
+      currentGroups.find((g) => g.sessionTypeId === selectedSessionTypeId) ??
+      null,
+    [currentGroups, selectedSessionTypeId],
+  );
+
+  const selectedGroup =
+    availableGroups.find((g) => g.id === selectedGroupId) ?? null;
+
   const handleNext = () => {
-    if (selectedGroupId && params.id) {
-      navigate(ROUTE_PATHS.student.swapStep2(params.id), {
-        state: { selectedGroupId },
-      });
-    }
+    if (!selectedSessionTypeId || !selectedGroupId || !params.id) return;
+    navigate(ROUTE_PATHS.student.swapStep2(params.id), {
+      state: { selectedSessionTypeId, selectedGroupId },
+    });
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <p>{LABELS.common.loading}</p>
+        <p className="text-sm text-slate-500">{LABELS.common.loading}</p>
       </div>
     );
+  }
 
-  if (error || !data)
+  if (error || !data) {
     return (
       <div className="flex items-center justify-center p-12">
-        <p className="text-red-600">{LABELS.common.notFound}</p>
+        <p className="text-sm text-red-600">{LABELS.common.notFound}</p>
       </div>
     );
+  }
+
+  const hasAnyEnabled = optionStates.some((o) => o.enabled);
+
+  if (!hasAnyEnabled) {
+    return (
+      <section className="mx-auto max-w-2xl grid gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">
+            Zamjena grupe
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">Korak 1 od 2</p>
+        </div>
+        <article className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-amber-900">
+            Za ovaj kolegij trenutno nije dostupan nijedan tip vježbe za
+            zamjenu.
+          </p>
+        </article>
+        <Button
+          variant="outline"
+          onClick={() => navigate(ROUTE_PATHS.student.courseDetail(params.id!))}
+        >
+          Natrag
+        </Button>
+      </section>
+    );
+  }
 
   return (
-    <section className="mx-auto max-w-2xl">
-      <div className="mb-6">
-        <h1 className="mb-2 text-2xl font-semibold text-slate-900">
-          Zamjena grupe
-        </h1>
-        <p className="text-sm text-slate-600">
-          Korak 1 od 2: Odaberite novu grupu
+    <section className="mx-auto max-w-2xl grid gap-6">
+      <div>
+        <h1 className="text-xl font-semibold text-slate-900">Zamjena grupe</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Korak 1 od 2 — Odaberi tip i grupu
         </p>
       </div>
 
-      <div className="grid gap-6">
-        {/* Current group */}
-        <article className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-          <h2 className="text-sm font-semibold text-slate-900">Tip termina</h2>
-          <div className="flex flex-wrap gap-2">
-            {(data.sessionTypes ?? []).map((sessionType) => (
-              <Button
-                key={sessionType.id}
-                size="sm"
-                variant={
-                  selectedSessionTypeId === sessionType.id
-                    ? "primary"
-                    : "outline"
-                }
-                onClick={() => setSelectedSessionTypeId(sessionType.id)}
-              >
-                {sessionType.type === SessionKind.LAB ? "LAB" : "VJEZBE"}
-              </Button>
-            ))}
-          </div>
-        </article>
-
-        {/* Current group */}
-        <article className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Trenutna grupa (
-            {selectedSessionType?.type === SessionKind.LAB ? "LAB" : "VJEZBE"})
-          </h2>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="mb-2 font-medium text-slate-900">
-              {currentGroupForSelectedType?.name ?? "Niste rasporedeni"}
-            </p>
-            {currentGroupForSelectedType ? (
-              <CapacityBar
-                current={currentGroupForSelectedType.currentCount}
-                max={currentGroupForSelectedType.capacity}
-              />
-            ) : null}
-          </div>
-        </article>
-
-        {/* Available groups */}
-        <article className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Dostupne grupe (
-            {selectedSessionType?.type === SessionKind.LAB ? "LAB" : "VJEZBE"})
-          </h2>
-          <div className="grid gap-2">
-            {groupsForSelectedType.map((group) => (
+      {/* Session type picker */}
+      <article className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+        <h2 className="text-sm font-semibold text-slate-700">Tip vježbe</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {optionStates.map((option) => {
+            const isSelected = selectedSessionTypeId === option.sessionTypeId;
+            return (
               <button
-                key={group.id}
-                onClick={() => setSelectedGroupId(group.id)}
-                className={`grid gap-2 rounded-lg border-2 p-3 text-left transition-all ${
-                  selectedGroupId === group.id
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-slate-200 bg-white hover:border-slate-300"
+                key={option.kind}
+                type="button"
+                onClick={() =>
+                  option.enabled &&
+                  option.sessionTypeId &&
+                  setSelectedSessionTypeId(option.sessionTypeId)
+                }
+                disabled={!option.enabled}
+                className={`grid gap-1 rounded-xl border-2 p-4 text-left transition-all ${
+                  !option.enabled
+                    ? "cursor-not-allowed border-slate-100 bg-slate-50 opacity-50"
+                    : isSelected
+                      ? "border-indigo-500 bg-indigo-50"
+                      : "border-slate-200 bg-white hover:border-slate-300"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-slate-900">{group.name}</p>
-                    <p className="text-xs text-slate-500">
-                      {formatGroupSchedule(group)}
-                    </p>
-                  </div>
-                  <p className="text-xs text-slate-600">
-                    {group.currentCount}/{group.capacity}
-                  </p>
-                </div>
-                <CapacityBar
-                  current={group.currentCount}
-                  max={group.capacity}
-                />
+                <p
+                  className={`text-sm font-semibold ${isSelected ? "text-indigo-700" : "text-slate-900"}`}
+                >
+                  {option.title}
+                </p>
+                <p
+                  className={`text-xs ${isSelected ? "text-indigo-500" : "text-slate-400"}`}
+                >
+                  {option.disabledLabel ?? "Dostupno za odabir"}
+                </p>
               </button>
-            ))}
-            {!groupsForSelectedType.length ? (
-              <p className="text-sm text-slate-500">
-                Nema dostupnih grupa za odabrani tip termina.
+            );
+          })}
+        </div>
+      </article>
+
+      {/* Current group info */}
+      {currentGroupForSelectedType && (
+        <article className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+          <h2 className="text-sm font-semibold text-slate-700">
+            Tvoja trenutna grupa
+          </h2>
+          <div className="rounded-lg bg-slate-50 p-3 grid gap-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-slate-900">
+                {currentGroupForSelectedType.name}
               </p>
-            ) : null}
+              <p className="text-xs text-slate-500">
+                {currentGroupForSelectedType.currentCount}/
+                {currentGroupForSelectedType.capacity}
+              </p>
+            </div>
+            <CapacityBar
+              current={currentGroupForSelectedType.currentCount}
+              max={currentGroupForSelectedType.capacity}
+            />
           </div>
         </article>
+      )}
 
-        {/* Actions */}
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() =>
-              navigate(ROUTE_PATHS.student.courseDetail(params.id!))
-            }
-          >
-            Otkaži
-          </Button>
-          <Button disabled={!selectedGroupId} onClick={handleNext}>
-            Dalje
-          </Button>
-        </div>
+      {/* Available groups */}
+      {selectedSessionTypeId && (
+        <article className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+          <h2 className="text-sm font-semibold text-slate-700">
+            Dostupne grupe
+          </h2>
+          {!availableGroups.length ? (
+            <p className="text-sm text-slate-500">
+              Nema dostupnih grupa za odabrani tip.
+            </p>
+          ) : (
+            <div className="grid gap-2">
+              {availableGroups.map((group) => {
+                const isSelected = selectedGroupId === group.id;
+                const isCurrent = group.id === currentGroupForSelectedType?.id;
+                return (
+                  <button
+                    key={group.id}
+                    type="button"
+                    disabled={isCurrent}
+                    onClick={() => !isCurrent && setSelectedGroupId(group.id)}
+                    className={`grid gap-2 rounded-xl border-2 p-3 text-left transition-all ${
+                      isCurrent
+                        ? "cursor-not-allowed border-slate-100 bg-slate-50 opacity-50"
+                        : isSelected
+                          ? "border-indigo-500 bg-indigo-50"
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p
+                          className={`text-sm font-medium ${isSelected ? "text-indigo-700" : "text-slate-900"}`}
+                        >
+                          {group.name}
+                          {isCurrent && (
+                            <span className="ml-2 text-xs text-slate-400">
+                              (trenutna)
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {formatGroupSchedule(group)}
+                        </p>
+                      </div>
+                      <p className="text-xs text-slate-500 flex-shrink-0">
+                        {group.currentCount}/{group.capacity}
+                      </p>
+                    </div>
+                    <CapacityBar
+                      current={group.currentCount}
+                      max={group.capacity}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </article>
+      )}
+
+      {/* Selected group summary */}
+      {selectedGroup && currentGroupForSelectedType && (
+        <article className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+          <p className="text-sm font-medium text-indigo-800">
+            Mijenjaš se iz{" "}
+            <span className="font-semibold">
+              {currentGroupForSelectedType.name}
+            </span>{" "}
+            u <span className="font-semibold">{selectedGroup.name}</span>
+          </p>
+          <p className="text-xs text-indigo-600 mt-1">
+            {formatGroupSchedule(currentGroupForSelectedType)} →{" "}
+            {formatGroupSchedule(selectedGroup)}
+          </p>
+        </article>
+      )}
+
+      {/* Actions */}
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          onClick={() => navigate(ROUTE_PATHS.student.courseDetail(params.id!))}
+        >
+          Otkaži
+        </Button>
+        <Button
+          disabled={!selectedGroupId || !selectedSessionTypeId}
+          onClick={handleNext}
+        >
+          Dalje
+        </Button>
       </div>
     </section>
   );
