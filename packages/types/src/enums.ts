@@ -47,3 +47,18 @@ export enum ReportIssueReason {
   MISSING_EQUIPMENT = "MISSING_EQUIPMENT",
   OTHER = "OTHER",
 }
+
+export enum CourseManagementTab {
+  OVERVIEW = "overview",
+  STUDENTS = "students",
+  REQUESTS = "requests",
+  GROUPS = "groups",
+}
+
+export enum CourseManagementRequestTab {
+  ALL = "all",
+  MANUAL = "manual",
+  AUTOMATIC = "automatic",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+}
