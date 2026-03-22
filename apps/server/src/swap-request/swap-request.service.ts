@@ -4,6 +4,7 @@ import {
   ConflictException,
   BadRequestException,
   Inject,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   MockCourseRepository,
@@ -11,10 +12,12 @@ import {
   MockSwapRequestRepository,
   MockStudentGroupRepository,
   MockGroupRepository,
+  MockSessionTypeRepository,
   MockStudentCourseRepository,
 } from '../repositories';
 import {
   StudentSwapViewState,
+  SessionKind,
   SwapMode,
   SwapRequest,
   SwapRequestStatus,
@@ -30,6 +33,7 @@ export class SwapRequestService {
     private readonly swapRequestRepo: MockSwapRequestRepository,
     private readonly studentGroupRepo: MockStudentGroupRepository,
     private readonly groupRepo: MockGroupRepository,
+    private readonly sessionTypeRepo: MockSessionTypeRepository,
     private readonly studentCourseRepo: MockStudentCourseRepository,
     private readonly courseRepo: MockCourseRepository,
     @Inject('UserRepository') private readonly userRepo: MockUserRepository,
@@ -243,6 +247,45 @@ export class SwapRequestService {
     const desiredGroup = await this.groupRepo.findById(dto.desiredGroupId);
     if (!desiredGroup) throw new NotFoundException('Desired group not found');
 
+    const currentGroup = await this.groupRepo.findById(dto.currentGroupId);
+    if (!currentGroup) {
+      throw new NotFoundException('Current group not found');
+    }
+
+    const [currentSessionType, desiredSessionType] = await Promise.all([
+      this.sessionTypeRepo.findById(currentGroup.sessionTypeId),
+      this.sessionTypeRepo.findById(desiredGroup.sessionTypeId),
+    ]);
+
+    if (!currentSessionType || !desiredSessionType) {
+      throw new BadRequestException('Session type metadata is missing');
+    }
+
+    if (
+      currentSessionType.courseId !== dto.courseId ||
+      desiredSessionType.courseId !== dto.courseId
+    ) {
+      throw new BadRequestException(
+        'Groups must belong to the selected course',
+      );
+    }
+
+    const sameSessionKind = currentSessionType.type === desiredSessionType.type;
+    if (!sameSessionKind) {
+      const kindLabel = (kind: SessionKind) =>
+        kind === SessionKind.LAB ? 'LAB' : 'EXERCISE';
+
+      throw new BadRequestException(
+        `Swap across session types is not allowed (${kindLabel(currentSessionType.type)} -> ${kindLabel(desiredSessionType.type)})`,
+      );
+    }
+
+    if (dto.sessionTypeId !== desiredGroup.sessionTypeId) {
+      throw new BadRequestException(
+        'Selected session type does not match desired group session type',
+      );
+    }
+
     const requestType =
       dto.requestType ??
       (dto.partnerEmail ? SwapRequestType.PAIRED : SwapRequestType.SOLO);
@@ -411,22 +454,42 @@ export class SwapRequestService {
 
   async getCourseRequests(
     courseId: string | undefined,
-    mode: 'MANUAL' | 'SEMI_AUTO' | 'AUTO',
+    mode: SwapMode,
+    professorId?: string,
   ) {
+    let allowedCourseIds: string[] | null = null;
+    if (professorId) {
+      const professorCourses = await this.courseRepo.findMany({
+        where: { professorId },
+      });
+      allowedCourseIds = professorCourses.map((course) => course.id);
+
+      if (courseId && !allowedCourseIds.includes(courseId)) {
+        throw new ForbiddenException('Course is not assigned to professor');
+      }
+    }
+
     const requests: SwapRequest[] = courseId
       ? await this.swapRequestRepo.findByCourse(courseId)
       : await this.swapRequestRepo.findMany();
 
+    const scopedRequests =
+      allowedCourseIds === null
+        ? requests
+        : requests.filter((request) =>
+            allowedCourseIds.includes(request.courseId),
+          );
+
     const visibleRequests = this.dedupeStaffCards(
-      requests.filter((request) => this.isVisibleToStaff(request)),
+      scopedRequests.filter((request) => this.isVisibleToStaff(request)),
     );
 
     let filtered: SwapRequest[] = [];
-    if (mode === 'MANUAL') {
+    if (mode === SwapMode.MANUAL) {
       filtered = visibleRequests.filter(
         (request) => request.status !== SwapRequestStatus.AUTO_RESOLVED,
       );
-    } else if (mode === 'SEMI_AUTO') {
+    } else if (mode === SwapMode.SEMI_AUTO) {
       filtered = visibleRequests.filter(
         (request) =>
           request.requestType === SwapRequestType.PAIRED &&

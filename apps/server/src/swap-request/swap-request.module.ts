@@ -7,6 +7,7 @@ import { MockGroupRepository } from '../repositories/mock/mock-group.repository'
 import { MockStudentCourseRepository } from '../repositories/mock/mock-student-course.repository';
 import { MockCourseRepository } from '../repositories/mock/mock-course.repository';
 import { MockUserRepository } from '../repositories/mock/mock-user.repository';
+import { MockSessionTypeRepository } from 'src/repositories';
 
 @Module({
   controllers: [SwapRequestController],
@@ -18,6 +19,7 @@ import { MockUserRepository } from '../repositories/mock/mock-user.repository';
     MockStudentCourseRepository,
     MockCourseRepository,
     MockUserRepository,
+    MockSessionTypeRepository,
     {
       provide: 'UserRepository',
       useClass: MockUserRepository,

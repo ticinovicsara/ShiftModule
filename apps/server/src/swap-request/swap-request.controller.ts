@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import { SwapMode, UserRole } from '@repo/types';
 import { SwapRequestService } from './swap-request.service';
 import type { CreateSwapRequestDto } from './dto/create-swap-request.dto';
 import type { RejectSwapRequestDto } from './dto/reject-swap-request.dto';
@@ -20,7 +21,7 @@ export class SwapRequestController {
   constructor(private readonly swapRequestService: SwapRequestService) {}
 
   @Get('student/requests')
-  @Roles('STUDENT')
+  @Roles(UserRole.STUDENT)
   async getMyRequests(@Req() request: Request) {
     const studentId = (request as Request & { user?: { id?: string } }).user
       ?.id;
@@ -29,14 +30,14 @@ export class SwapRequestController {
   }
 
   @Get('admin/requests')
-  @Roles('ADMIN')
+  @Roles(UserRole.ADMIN)
   async getAllRequests(@Query('courseId') courseId?: string) {
     const data = await this.swapRequestService.getAllRequests(courseId);
     return { data, error: null, message: 'OK' };
   }
 
   @Post('student/requests')
-  @Roles('STUDENT')
+  @Roles(UserRole.STUDENT)
   async createRequest(
     @Req() request: Request,
     @Body() dto: CreateSwapRequestDto,
@@ -48,7 +49,7 @@ export class SwapRequestController {
   }
 
   @Post('student/requests/:id/confirm-partner')
-  @Roles('STUDENT')
+  @Roles(UserRole.STUDENT)
   async confirmPartner(
     @Req() request: Request,
     @Param('id') requestId: string,
@@ -63,7 +64,7 @@ export class SwapRequestController {
   }
 
   @Post('student/requests/:id/decline-partner')
-  @Roles('STUDENT')
+  @Roles(UserRole.STUDENT)
   async declinePartner(
     @Req() request: Request,
     @Param('id') requestId: string,
@@ -78,27 +79,31 @@ export class SwapRequestController {
   }
 
   @Get('professor/requests')
-  @Roles('PROFESSOR')
+  @Roles(UserRole.PROFESSOR)
   async getCourseRequests(
+    @Req() request: Request,
     @Query('courseId') courseId?: string,
-    @Query('mode') mode: 'MANUAL' | 'SEMI_AUTO' | 'AUTO' = 'MANUAL',
+    @Query('mode') mode: SwapMode = SwapMode.MANUAL,
   ) {
+    const professorId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
     const data = await this.swapRequestService.getCourseRequests(
       courseId,
       mode,
+      professorId,
     );
     return { data, error: null, message: 'OK' };
   }
 
-  @Post('professor/requests/:id/approve')
-  @Roles('PROFESSOR', 'ADMIN')
+  @Post('requests/:id/approve')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
   async approveRequest(@Param('id') id: string) {
     const data = await this.swapRequestService.approveRequest(id);
     return { data, error: null, message: 'Request approved' };
   }
 
-  @Post('professor/requests/:id/reject')
-  @Roles('PROFESSOR', 'ADMIN')
+  @Post('requests/:id/reject')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
   async rejectRequest(
     @Param('id') id: string,
     @Body() dto: RejectSwapRequestDto,
