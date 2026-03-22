@@ -15,7 +15,7 @@ export function useDashboardStats() {
       adminApi.users.getStudents(),
       adminApi.courses.getAll(),
       adminApi.groups.getAll(),
-      swapRequestApi.student.getAll(),
+      swapRequestApi.admin.getAll(),
     ]);
 
     return {
@@ -26,10 +26,8 @@ export function useDashboardStats() {
     };
   }, []);
 
-  const { data, loading, error, refetch } = useFetch<DashboardStats>(
-    fetchStats,
-    [fetchStats],
-  );
+  const { data, loading, error, refetch } =
+    useFetch<DashboardStats>(fetchStats);
 
   const metrics = useMemo(
     () => [

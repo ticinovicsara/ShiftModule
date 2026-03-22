@@ -20,7 +20,7 @@ export function useProfessorDashboardStats() {
     };
   }, []);
 
-  const { data, loading, error, refetch } = useFetch(fetchStats, [fetchStats]);
+  const { data, loading, error, refetch } = useFetch(fetchStats);
 
   const metrics = useMemo(
     () => [

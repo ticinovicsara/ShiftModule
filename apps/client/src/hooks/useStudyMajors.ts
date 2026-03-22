@@ -6,9 +6,7 @@ import { useMutation } from "./useMutation";
 
 export function useStudyMajors() {
   const fetchAll = useCallback(() => adminApi.studyMajors.getAll(), []);
-  const { data, loading, error, refetch } = useFetch<StudyMajor[]>(fetchAll, [
-    fetchAll,
-  ]);
+  const { data, loading, error, refetch } = useFetch<StudyMajor[]>(fetchAll);
 
   const createMutation = useMutation((dto: CreateStudyMajorDto) =>
     adminApi.studyMajors.create(dto),

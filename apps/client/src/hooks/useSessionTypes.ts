@@ -13,9 +13,7 @@ export function useSessionTypes(courseId?: string) {
     return adminApi.sessionTypes.getByCourse(courseId);
   }, [courseId]);
 
-  const { data, loading, error, refetch } = useFetch<SessionType[]>(fetchAll, [
-    fetchAll,
-  ]);
+  const { data, loading, error, refetch } = useFetch<SessionType[]>(fetchAll);
   const createMutation = useMutation((dto: CreateSessionTypeDto) =>
     adminApi.sessionTypes.create(dto),
   );
