@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Button, Input } from "../../components/ui";
+import { ApiError } from "../../api/client";
+import { Button, Input } from "../../components";
 import { DEFAULT_ROUTE_BY_ROLE, LABELS } from "../../constants";
 import { AuthContext } from "../../context/AuthContext";
 
@@ -27,8 +28,21 @@ export function LoginPage() {
 
     try {
       await login({ email, password });
-    } catch {
-      setError(LABELS.auth.invalidCredentials);
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        if (
+          unknownError.statusCode === 401 ||
+          unknownError.statusCode === 403
+        ) {
+          setError(LABELS.auth.invalidCredentials);
+        } else if (unknownError.statusCode === 0) {
+          setError(LABELS.auth.networkError);
+        } else {
+          setError(LABELS.auth.loginFailed);
+        }
+      } else {
+        setError(LABELS.auth.loginFailed);
+      }
     } finally {
       setLoading(false);
     }
