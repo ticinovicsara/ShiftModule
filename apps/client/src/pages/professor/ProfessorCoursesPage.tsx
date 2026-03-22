@@ -4,7 +4,13 @@ import { LABELS } from "../../constants";
 import { ROUTE_PATHS } from "../../constants";
 import { useCourses } from "../../hooks";
 
-export function ProfessorCoursesPage() {
+interface ProfessorCoursesPageProps {
+  role?: "admin" | "professor";
+}
+
+export function ProfessorCoursesPage({
+  role = "professor",
+}: ProfessorCoursesPageProps) {
   const navigate = useNavigate();
   const { data, loading, error } = useCourses();
 
@@ -23,20 +29,30 @@ export function ProfessorCoursesPage() {
           key={course.id}
           className="cursor-pointer transition-opacity hover:opacity-80 active:opacity-60"
           onClick={() =>
-            navigate(ROUTE_PATHS.professor.courseDetail(course.id))
+            navigate(
+              role === "admin"
+                ? ROUTE_PATHS.admin.courseDetail(course.id)
+                : ROUTE_PATHS.professor.courseDetail(course.id),
+            )
           }
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              navigate(ROUTE_PATHS.professor.courseDetail(course.id));
+              navigate(
+                role === "admin"
+                  ? ROUTE_PATHS.admin.courseDetail(course.id)
+                  : ROUTE_PATHS.professor.courseDetail(course.id),
+              );
             }
           }}
         >
           <CourseCard
             course={course}
-            subtitle={LABELS.nav.myCourses}
+            subtitle={
+              role === "admin" ? LABELS.nav.courses : LABELS.nav.myCourses
+            }
             variant="professor"
           />
         </div>
