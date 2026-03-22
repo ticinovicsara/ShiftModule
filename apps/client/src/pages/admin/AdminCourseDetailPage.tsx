@@ -1,3 +1,4 @@
+import { UserRole } from "@repo/types";
 import { useParams } from "react-router-dom";
 import { CourseManagementDetailPage } from "../shared";
 
@@ -7,5 +8,7 @@ export function AdminCourseDetailPage() {
     return null;
   }
 
-  return <CourseManagementDetailPage courseId={params.id} role="admin" />;
+  return (
+    <CourseManagementDetailPage courseId={params.id} role={UserRole.ADMIN} />
+  );
 }

@@ -51,7 +51,7 @@ export function AppRouter() {
           />
           <Route
             path={ROUTE_PATHS.admin.courses}
-            element={<AdminCoursesPage />}
+            element={<ProfessorCoursesPage role="admin" />}
           />
           <Route
             path={ROUTE_PATHS.routePatterns.adminCourseDetail}
