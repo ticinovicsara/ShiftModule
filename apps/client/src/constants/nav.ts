@@ -68,6 +68,11 @@ export const NAVIGATION_CONFIG: Record<
         icon: "requests",
       },
       {
+        label: LABELS.nav.courses,
+        path: ROUTE_PATHS.admin.courses,
+        icon: "courses",
+      },
+      {
         label: LABELS.nav.groups,
         path: ROUTE_PATHS.admin.groups,
         icon: "groups",
@@ -95,9 +100,19 @@ export const NAVIGATION_CONFIG: Record<
         icon: "requests",
       },
       {
+        label: LABELS.nav.courses,
+        path: ROUTE_PATHS.admin.courses,
+        icon: "courses",
+      },
+      {
         label: LABELS.nav.settings,
         path: ROUTE_PATHS.admin.settings,
         icon: "settings",
+      },
+      {
+        label: "Merlin",
+        path: "https://merlin.srce.hr",
+        icon: "courses",
       },
     ],
   },

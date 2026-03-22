@@ -27,6 +27,8 @@ export const LABELS = {
     password: "Lozinka",
     signIn: "Prijavi se",
     invalidCredentials: "Neispravni podaci za prijavu.",
+    networkError: "Provjerite internetsku vezu i pokušajte ponovno.",
+    loginFailed: "Prijava trenutno nije dostupna. Pokušajte ponovno kasnije.",
   },
   nav: {
     home: "Početna",
