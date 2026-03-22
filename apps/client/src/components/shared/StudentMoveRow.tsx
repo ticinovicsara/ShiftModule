@@ -4,6 +4,7 @@ import { Select, Button } from "../ui";
 export interface StudentMoveRowProps {
   studentName: string;
   studentEmail: string;
+  currentGroupId: string;
   currentGroupLabel: string;
   selectedGroupId?: string;
   groupOptions: SelectOption[];
@@ -13,6 +14,7 @@ export interface StudentMoveRowProps {
 }
 
 export function StudentMoveRow({
+  currentGroupId,
   currentGroupLabel,
   groupOptions,
   onGroupChange,
@@ -22,10 +24,8 @@ export function StudentMoveRow({
   studentEmail,
   studentName,
 }: StudentMoveRowProps) {
-  const hasChanged =
-    selectedGroupId &&
-    selectedGroupId !==
-      groupOptions.find((g) => g.label === currentGroupLabel)?.value;
+  const effectiveSelectedGroupId = selectedGroupId ?? currentGroupId;
+  const hasChanged = effectiveSelectedGroupId !== currentGroupId;
 
   return (
     <article className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft md:grid-cols-[1.4fr_1fr_auto] md:items-end">
@@ -41,11 +41,12 @@ export function StudentMoveRow({
         label="Premjesti u grupu"
         onValueChange={onGroupChange}
         options={groupOptions}
-        value={selectedGroupId}
+        placeholder="Odaberi novu grupu"
+        value={effectiveSelectedGroupId}
       />
       {hasChanged && onMove && (
         <Button
-          onClick={() => onMove(selectedGroupId)}
+          onClick={() => onMove(effectiveSelectedGroupId)}
           disabled={isMoving}
           size="sm"
           variant="success"

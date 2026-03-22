@@ -1,6 +1,7 @@
 export * from "./BottomNav";
 export * from "./CapacityBar";
 export * from "./CourseCard";
+export * from "./CourseManagementDetail";
 export * from "./FilterTabs";
 export * from "./InfoPanel";
 export * from "./ImportPreviewTable";

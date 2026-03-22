@@ -23,13 +23,13 @@ export const swapRequestApi = {
   professor: {
     getByCourse: (query: ProfessorRequestQuery) =>
       client.get<SwapRequest[]>(API_ENDPOINTS.professor.swapRequests, query),
+  },
+  requests: {
     approve: (requestId: string) =>
-      client.post<SwapRequest>(
-        API_ENDPOINTS.professor.approveSwapRequest(requestId),
-      ),
+      client.post<SwapRequest>(API_ENDPOINTS.swapRequests.approve(requestId)),
     reject: (requestId: string, dto: RejectSwapRequestDto) =>
       client.post<SwapRequest>(
-        API_ENDPOINTS.professor.rejectSwapRequest(requestId),
+        API_ENDPOINTS.swapRequests.reject(requestId),
         dto,
       ),
   },

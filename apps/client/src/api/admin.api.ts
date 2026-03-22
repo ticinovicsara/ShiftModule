@@ -56,6 +56,7 @@ export const adminApi = {
       client.get<{
         course: Course;
         groups: Group[];
+        sessionTypes: SessionType[];
         students: Array<{
           id: string;
           firstName: string;
@@ -63,6 +64,12 @@ export const adminApi = {
           email: string;
           currentGroupId?: string;
           currentGroupName?: string;
+          assignments: Array<{
+            sessionTypeId: string;
+            sessionKind?: SessionType["type"];
+            groupId: string;
+            groupName: string;
+          }>;
         }>;
         stats: {
           totalStudents: number;
@@ -76,6 +83,11 @@ export const adminApi = {
       client.patch<Course>(API_ENDPOINTS.admin.courseById(id), dto),
     assignProfessor: (id: string, dto: AssignProfessorDto) =>
       client.post<Course>(API_ENDPOINTS.admin.assignProfessor(id), dto),
+    reportIssue: (id: string, dto: ReportIssueDto) =>
+      client.post<ReportIssueResponse>(
+        API_ENDPOINTS.professor.courseReportIssue(id),
+        dto,
+      ),
     remove: (id: string) =>
       client.delete<Course>(API_ENDPOINTS.admin.courseById(id)),
   },
@@ -90,15 +102,10 @@ export const adminApi = {
       client.patch<Group>(API_ENDPOINTS.admin.groupCapacity(id), dto),
     moveStudentToGroup: (studentId: string, groupId: string) =>
       client.post<{ success: boolean; message: string }>(
-        `/admin/students/${studentId}/move-to-group/${groupId}`,
+        API_ENDPOINTS.admin.moveStudentToGroup(studentId, groupId),
       ),
     remove: (id: string) =>
       client.delete<Group>(API_ENDPOINTS.admin.groupById(id)),
-    reportIssue: (id: string, dto: ReportIssueDto) =>
-      client.post<ReportIssueResponse>(
-        API_ENDPOINTS.professor.reportIssue(id),
-        dto,
-      ),
   },
 
   sessionTypes: {

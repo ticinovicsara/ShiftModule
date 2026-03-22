@@ -1,7 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { useContext } from "react";
 import type { NavigationItem } from "../../constants";
-import { AuthContext } from "../../context/AuthContext";
 import { getIcon } from "../../utils/icons";
 
 export interface SidebarNavProps {
@@ -9,20 +7,14 @@ export interface SidebarNavProps {
 }
 
 export function SidebarNav({ items }: SidebarNavProps) {
-  const auth = useContext(AuthContext);
-  const displayName = auth?.user
-    ? `${auth.user.firstName} ${auth.user.lastName}`
-    : "ShiftModule";
-
   return (
-    <aside className="hidden h-screen w-72 shrink-0 border-r border-slate-200 bg-white px-4 py-6 md:block">
-      <h1 className="p-3 text-xl font-bold">{displayName}</h1>
+    <aside className="hidden sticky top-0 min-h-screen w-72 shrink-0 border-r border-slate-200 bg-white px-4 py-6 md:block overflow-y-auto">
+      <h1 className="p-3 text-xl font-bold text-primary">ShiftModule</h1>
       <ul className="space-y-1">
         {items.map((item) => {
           const IconComponent = getIcon(item.icon);
           const isExternal = item.path.startsWith("http");
 
-          // TODO: future - SSO passthrough to auto-login user to Merlin
           return (
             <li key={item.label}>
               {isExternal ? (

@@ -111,8 +111,7 @@ class ApiClient {
   }
 
   async get<TData>(url: string, params?: object): Promise<TData> {
-    const response = await this.instance.get<TData>(url, { params });
-    return response as unknown as TData;
+    return this.instance.get<TData, TData>(url, { params });
   }
 
   async post<TData>(
@@ -120,18 +119,15 @@ class ApiClient {
     body?: object,
     config?: AxiosRequestConfig,
   ): Promise<TData> {
-    const response = await this.instance.post<TData>(url, body, config);
-    return response as unknown as TData;
+    return this.instance.post<TData, TData>(url, body, config);
   }
 
   async patch<TData>(url: string, body?: object): Promise<TData> {
-    const response = await this.instance.patch<TData>(url, body);
-    return response as unknown as TData;
+    return this.instance.patch<TData, TData>(url, body);
   }
 
   async delete<TData>(url: string): Promise<TData> {
-    const response = await this.instance.delete<TData>(url);
-    return response as unknown as TData;
+    return this.instance.delete<TData, TData>(url);
   }
 }
 

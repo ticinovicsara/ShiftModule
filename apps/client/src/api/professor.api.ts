@@ -1,4 +1,4 @@
-import type { Course, SwapRequest } from "@repo/types";
+import type { Course, SessionType, SwapRequest } from "@repo/types";
 import type {
   ProfessorRequestQuery,
   RejectSwapRequestDto,
@@ -30,6 +30,7 @@ export const professorApi = {
           isActive: boolean;
           sessionTypeId: string;
         }>;
+        sessionTypes: SessionType[];
         students: Array<{
           id: string;
           firstName: string;
@@ -37,6 +38,12 @@ export const professorApi = {
           email: string;
           currentGroupId?: string;
           currentGroupName?: string;
+          assignments: Array<{
+            sessionTypeId: string;
+            sessionKind?: SessionType["type"];
+            groupId: string;
+            groupName: string;
+          }>;
         }>;
         stats: {
           totalStudents: number;
@@ -46,29 +53,26 @@ export const professorApi = {
       }>(API_ENDPOINTS.professor.courseById(id)),
     setSwapMode: (id: string, mode: { mode: Course["swapMode"] }) =>
       client.patch<Course>(API_ENDPOINTS.professor.courseSwapMode(id), mode),
+    reportIssue: (id: string, dto: ReportIssueDto) =>
+      client.post<{ message: string }>(
+        API_ENDPOINTS.professor.courseReportIssue(id),
+        dto,
+      ),
   },
 
   requests: {
     getByCourse: (query: ProfessorRequestQuery) =>
       client.get<SwapRequest[]>(API_ENDPOINTS.professor.swapRequests, query),
     approve: (id: string) =>
-      client.post<SwapRequest>(API_ENDPOINTS.professor.approveSwapRequest(id)),
+      client.post<SwapRequest>(API_ENDPOINTS.swapRequests.approve(id)),
     reject: (id: string, dto: RejectSwapRequestDto) =>
-      client.post<SwapRequest>(
-        API_ENDPOINTS.professor.rejectSwapRequest(id),
-        dto,
-      ),
+      client.post<SwapRequest>(API_ENDPOINTS.swapRequests.reject(id), dto),
   },
 
   groups: {
     moveStudentToGroup: (studentId: string, groupId: string) =>
       client.post<{ success: boolean; message: string }>(
-        `/admin/students/${studentId}/move-to-group/${groupId}`,
-      ),
-    reportIssue: (id: string, dto: ReportIssueDto) =>
-      client.post<{ message: string }>(
-        API_ENDPOINTS.professor.reportIssue(id),
-        dto,
+        API_ENDPOINTS.admin.moveStudentToGroup(studentId, groupId),
       ),
   },
 };

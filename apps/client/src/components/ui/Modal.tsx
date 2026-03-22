@@ -7,13 +7,11 @@ export interface ModalProps {
   onClose: () => void;
   title: string;
   description?: string;
-  children: ReactNode;
   footer?: ReactNode;
   variant?: "center" | "bottom-sheet";
 }
 
 export function Modal({
-  children,
   description,
   footer,
   onClose,
@@ -72,7 +70,7 @@ export function Modal({
             <div>
               <h2 className="text-lg font-bold text-slate-900">{title}</h2>
               {description ? (
-                <p className="mt-1 text-sm text-slate-500">{description}</p>
+                <p className="mt-1 text-lg text-slate-500">{description}</p>
               ) : null}
             </div>
             <button
@@ -84,7 +82,6 @@ export function Modal({
             </button>
           </div>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto px-5 py-5">{children}</div>
         {footer ? (
           <div className="border-t border-slate-100 px-5 py-4">{footer}</div>
         ) : null}

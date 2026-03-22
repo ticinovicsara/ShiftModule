@@ -1,6 +1,7 @@
 import type {
   Course,
   Group,
+  SessionKind,
   SessionType,
   SwapRequest,
   SwapRequestStatus,
@@ -36,7 +37,8 @@ export const studentApi = {
       course: Course | null;
       sessionTypes: SessionType[];
       currentGroup: Group | null;
-      groups: Group[];
+      currentGroups: Group[];
+      groups: Array<Group & { sessionKind: SessionKind }>;
       hasPendingRequest: boolean;
     }>(API_ENDPOINTS.student.courseById(id)),
   getRequests: () => client.get<SwapRequest[]>(API_ENDPOINTS.student.requests),
