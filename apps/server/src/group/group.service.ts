@@ -82,10 +82,8 @@ export class GroupService {
     studentId: string,
     newGroupId: string,
   ): Promise<{ success: boolean; message: string }> {
-    // Verify the target group exists
-    await this.findById(newGroupId);
+    const targetGroup = await this.findById(newGroupId);
 
-    // Find the student's current group assignment
     const studentGroups = await this.studentGroupRepo.findByStudent(studentId);
     if (!studentGroups || studentGroups.length === 0) {
       throw new NotFoundException(
@@ -93,8 +91,30 @@ export class GroupService {
       );
     }
 
-    // For simplicity, move the first assignment (typically there's only one per course)
-    const studentGroup = studentGroups[0];
+    const studentGroupWithSameSessionType = (
+      await Promise.all(
+        studentGroups.map(async (studentGroup) => {
+          const currentGroup = await this.groupRepo.findById(
+            studentGroup.groupId,
+          );
+          if (!currentGroup) {
+            return null;
+          }
+
+          return currentGroup.sessionTypeId === targetGroup.sessionTypeId
+            ? studentGroup
+            : null;
+        }),
+      )
+    ).find((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+
+    if (!studentGroupWithSameSessionType) {
+      throw new BadRequestException(
+        'Student is not assigned to a group of the selected session type',
+      );
+    }
+
+    const studentGroup = studentGroupWithSameSessionType;
     const oldGroupId = studentGroup.groupId;
 
     // If already in the target group, no-op
