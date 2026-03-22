@@ -27,7 +27,7 @@ export function StudentCourseDetailPage() {
     return studentApi.getCourseById(params.id);
   }, [params.id]);
 
-  const { data, loading, error } = useFetch(fetchDetail, [fetchDetail]);
+  const { data, loading, error } = useFetch(fetchDetail);
 
   const courseRequests = useMemo(
     () => (requests ?? []).filter((request) => request.courseId === params.id),

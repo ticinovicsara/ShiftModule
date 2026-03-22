@@ -8,7 +8,7 @@ import { useFetch } from "../../hooks";
 
 export function StudentCoursesPage() {
   const navigate = useNavigate();
-  const { data, loading, error } = useFetch(studentApi.getMyEnrollments, []);
+  const { data, loading, error } = useFetch(studentApi.getMyEnrollments);
 
   if (loading) return <Spinner />;
 

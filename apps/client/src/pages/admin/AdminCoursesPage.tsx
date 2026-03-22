@@ -9,7 +9,7 @@ import { useCourses, useFetch } from "../../hooks";
 export function AdminCoursesPage() {
   const navigate = useNavigate();
   const { data, loading, error } = useCourses();
-  const { data: professors } = useFetch(adminApi.users.getProfessors, []);
+  const { data: professors } = useFetch(adminApi.users.getProfessors);
 
   const professorNameById = useMemo(() => {
     const entries: Array<[string, string]> = (professors ?? []).map(
