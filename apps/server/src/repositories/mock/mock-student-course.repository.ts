@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { BaseRepository, FindManyArgs } from '../base.repository';
+import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { StudentCourse } from '@repo/types';
 import { mockStudentCourses } from './data/mock-student-courses.data';
 
@@ -10,15 +10,11 @@ export class MockStudentCourseRepository extends BaseRepository<StudentCourse> {
     return this.store.find((sc) => sc.id === id) ?? null;
   }
 
-  async findMany(
-    args?: FindManyArgs<StudentCourse>,
-  ): Promise<StudentCourse[]> {
+  async findMany(args?: FindManyArgs<StudentCourse>): Promise<StudentCourse[]> {
     if (!args?.where) return [...this.store];
     const { where } = args;
-    return this.store.filter((sc) =>
-      Object.entries(where).every(
-        ([key, value]) => (sc as any)[key] === value,
-      ),
+    return this.store.filter((studentCourse) =>
+      matchesWhere(studentCourse, where),
     );
   }
 
@@ -33,8 +29,7 @@ export class MockStudentCourseRepository extends BaseRepository<StudentCourse> {
     data: Partial<StudentCourse>,
   ): Promise<StudentCourse> {
     const index = this.store.findIndex((sc) => sc.id === id);
-    if (index === -1)
-      throw new Error(`StudentCourse with id ${id} not found`);
+    if (index === -1) throw new Error(`StudentCourse with id ${id} not found`);
     const updated = { ...this.store[index], ...data };
     this.store[index] = updated;
     return updated;
@@ -42,8 +37,7 @@ export class MockStudentCourseRepository extends BaseRepository<StudentCourse> {
 
   async delete(id: string): Promise<StudentCourse> {
     const index = this.store.findIndex((sc) => sc.id === id);
-    if (index === -1)
-      throw new Error(`StudentCourse with id ${id} not found`);
+    if (index === -1) throw new Error(`StudentCourse with id ${id} not found`);
     const [removed] = this.store.splice(index, 1);
     return removed;
   }
@@ -56,4 +50,3 @@ export class MockStudentCourseRepository extends BaseRepository<StudentCourse> {
     return this.store.filter((sc) => sc.courseId === courseId);
   }
 }
-

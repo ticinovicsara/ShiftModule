@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
-import { BaseRepository, FindManyArgs } from '../base.repository';
-import { StudyMajor, User } from '@repo/types';
+import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
+import { StudyMajor } from '@repo/types';
 import { mockStudyMajors } from './data/mock-study-majors.data';
 
 export class MockStudyMajorRepository extends BaseRepository<StudyMajor> {
@@ -13,13 +13,11 @@ export class MockStudyMajorRepository extends BaseRepository<StudyMajor> {
   async findMany(args?: FindManyArgs<StudyMajor>): Promise<StudyMajor[]> {
     if (!args?.where) return [...this.store];
     const { where } = args;
-    return this.store.filter((m) =>
-      Object.entries(where).every(([key, value]) => (m as any)[key] === value),
-    );
+    return this.store.filter((studyMajor) => matchesWhere(studyMajor, where));
   }
 
   async create(data: Omit<StudyMajor, 'id'>): Promise<StudyMajor> {
-    const entity: StudyMajor = { ...data, id: crypto.randomUUID() };
+    const entity: StudyMajor = { ...data, id: randomUUID() };
     this.store.push(entity);
     return entity;
   }

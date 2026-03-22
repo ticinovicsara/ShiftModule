@@ -1,8 +1,12 @@
 import { randomUUID } from 'crypto';
-import { BaseRepository, FindManyArgs } from '../base.repository';
-import { Course } from '@repo/types';
+import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
+import { Course, SessionType } from '@repo/types';
 import { mockCourses } from './data/mock-courses.data';
 import { mockSessionTypes } from './data/mock-session-types.data';
+
+export type CourseWithSessionTypes = Course & {
+  sessionTypes: SessionType[];
+};
 
 export class MockCourseRepository extends BaseRepository<Course> {
   private store: Course[] = [...mockCourses];
@@ -14,9 +18,7 @@ export class MockCourseRepository extends BaseRepository<Course> {
   async findMany(args?: FindManyArgs<Course>): Promise<Course[]> {
     if (!args?.where) return [...this.store];
     const { where } = args;
-    return this.store.filter((c) =>
-      Object.entries(where).every(([key, value]) => (c as any)[key] === value),
-    );
+    return this.store.filter((course) => matchesWhere(course, where));
   }
 
   async create(data: Omit<Course, 'id'>): Promise<Course> {
@@ -44,12 +46,14 @@ export class MockCourseRepository extends BaseRepository<Course> {
     return this.store.filter((c) => c.studyMajorId === majorId);
   }
 
-  async findWithSessionTypes(id: string): Promise<Course | null> {
+  async findWithSessionTypes(
+    id: string,
+  ): Promise<CourseWithSessionTypes | null> {
     const course = await this.findById(id);
     if (!course) return null;
-    const activityTypes = mockSessionTypes.filter(
-      (at) => at.courseId === course.id,
+    const sessionTypes = mockSessionTypes.filter(
+      (sessionType) => sessionType.courseId === course.id,
     );
-    return { ...course, activityTypes } as any;
+    return { ...course, sessionTypes };
   }
 }

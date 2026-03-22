@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { BaseRepository, FindManyArgs } from '../base.repository';
+import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { SwapRequest, SwapRequestStatus } from '@repo/types';
 import { mockSwapRequests } from './data/mock-swap-requests.data';
 
@@ -18,9 +18,7 @@ export class MockSwapRequestRepository extends BaseRepository<SwapRequest> {
   async findMany(args?: FindManyArgs<SwapRequest>): Promise<SwapRequest[]> {
     if (!args?.where) return [...this.store];
     const { where } = args;
-    return this.store.filter((sr) =>
-      Object.entries(where).every(([key, value]) => (sr as any)[key] === value),
-    );
+    return this.store.filter((swapRequest) => matchesWhere(swapRequest, where));
   }
 
   async create(data: CreateSwapRequestInput): Promise<SwapRequest> {

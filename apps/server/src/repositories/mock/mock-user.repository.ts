@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { BaseRepository, FindManyArgs } from '../base.repository';
+import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { User, UserRole } from '@repo/types';
 import { mockUsers } from './data/mock-users.data';
 
@@ -13,9 +13,7 @@ export class MockUserRepository extends BaseRepository<User> {
   async findMany(args?: FindManyArgs<User>): Promise<User[]> {
     if (!args?.where) return [...this.store];
     const { where } = args;
-    return this.store.filter((u) =>
-      Object.entries(where).every(([key, value]) => (u as any)[key] === value),
-    );
+    return this.store.filter((user) => matchesWhere(user, where));
   }
 
   async create(data: Omit<User, 'id'>): Promise<User> {

@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { BaseRepository, FindManyArgs } from '../base.repository';
+import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { Group } from '@repo/types';
 import { mockGroups } from './data/mock-groups.data';
 
@@ -13,9 +13,7 @@ export class MockGroupRepository extends BaseRepository<Group> {
   async findMany(args?: FindManyArgs<Group>): Promise<Group[]> {
     if (!args?.where) return [...this.store];
     const { where } = args;
-    return this.store.filter((g) =>
-      Object.entries(where).every(([key, value]) => (g as any)[key] === value),
-    );
+    return this.store.filter((group) => matchesWhere(group, where));
   }
 
   async create(data: Omit<Group, 'id'>): Promise<Group> {

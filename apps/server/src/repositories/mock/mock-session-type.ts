@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { BaseRepository, FindManyArgs } from '../base.repository';
+import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { SessionType } from '@repo/types';
 import { mockSessionTypes } from './data/mock-session-types.data';
 
@@ -13,9 +13,7 @@ export class MockSessionTypeRepository extends BaseRepository<SessionType> {
   async findMany(args?: FindManyArgs<SessionType>): Promise<SessionType[]> {
     if (!args?.where) return [...this.store];
     const { where } = args;
-    return this.store.filter((a) =>
-      Object.entries(where).every(([key, value]) => (a as any)[key] === value),
-    );
+    return this.store.filter((sessionType) => matchesWhere(sessionType, where));
   }
 
   async findByCourse(courseId: string): Promise<SessionType[]> {
