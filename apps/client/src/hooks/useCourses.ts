@@ -23,9 +23,7 @@ export function useCourses() {
 
     return adminApi.courses.getAll();
   }, [auth.role]);
-  const { data, loading, error, refetch } = useFetch<Course[]>(fetchAll, [
-    fetchAll,
-  ]);
+  const { data, loading, error, refetch } = useFetch<Course[]>(fetchAll);
 
   const createMutation = useMutation((dto: CreateCourseDto) =>
     adminApi.courses.create(dto),

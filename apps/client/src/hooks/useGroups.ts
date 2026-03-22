@@ -1,13 +1,12 @@
 import type {
   CreateGroupDto,
   Group,
-  ReportIssueDto,
   UpdateGroupCapacityDto,
   UpdateGroupDto,
 } from "@repo/types";
 import { UserRole as Role } from "@repo/types";
 import { useCallback, useContext, useMemo } from "react";
-import { adminApi, professorApi } from "../api";
+import { adminApi } from "../api";
 import { AuthContext } from "../context/AuthContext";
 import { useFetch } from "./useFetch";
 import { useMutation } from "./useMutation";
@@ -25,9 +24,7 @@ export function useGroups() {
 
     return adminApi.groups.getAll();
   }, [auth.role]);
-  const { data, loading, error, refetch } = useFetch<Group[]>(fetchAll, [
-    fetchAll,
-  ]);
+  const { data, loading, error, refetch } = useFetch<Group[]>(fetchAll);
 
   const createMutation = useMutation((dto: CreateGroupDto) =>
     adminApi.groups.create(dto),
@@ -40,13 +37,10 @@ export function useGroups() {
     (args: { id: string; dto: UpdateGroupCapacityDto }) =>
       adminApi.groups.updateCapacity(args.id, args.dto),
   );
-  const reportIssueMutation = useMutation(
-    (args: { id: string; dto: ReportIssueDto }) =>
-      professorApi.groups.reportIssue(args.id, args.dto),
+  const moveStudentMutation = useMutation(
+    (args: { studentId: string; groupId: string }) =>
+      adminApi.groups.moveStudentToGroup(args.studentId, args.groupId),
   );
-  const moveStudentMutation = useMutation(async () => {
-    throw new Error("Move student endpoint is not available yet");
-  });
 
   return useMemo(
     () => ({
@@ -57,7 +51,6 @@ export function useGroups() {
       create: createMutation.execute,
       update: updateMutation.execute,
       updateCapacity: updateCapacityMutation.execute,
-      reportIssue: reportIssueMutation.execute,
       moveStudent: moveStudentMutation.execute,
     }),
     [
@@ -67,7 +60,6 @@ export function useGroups() {
       loading,
       moveStudentMutation.execute,
       refetch,
-      reportIssueMutation.execute,
       updateCapacityMutation.execute,
       updateMutation.execute,
     ],

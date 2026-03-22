@@ -13,7 +13,6 @@ export interface UseFetchResult<TData> {
 
 export function useFetch<TData>(
   fetcher: () => Promise<TData>,
-  dependencies: readonly unknown[] = [],
   options: UseFetchOptions = { immediate: true },
 ): UseFetchResult<TData> {
   const [data, setData] = useState<TData | null>(null);
@@ -44,7 +43,7 @@ export function useFetch<TData>(
     }
 
     void run();
-  }, [options.immediate, run, ...dependencies]);
+  }, [options.immediate, run]);
 
   return useMemo(
     () => ({ data, loading, error, refetch: run }),

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export interface UseMutationResult<TArgs extends unknown[], TResult> {
   execute: (...args: TArgs) => Promise<TResult>;
@@ -13,6 +13,13 @@ export function useMutation<TArgs extends unknown[], TResult>(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const execute = useCallback(
     async (...args: TArgs) => {

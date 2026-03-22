@@ -19,16 +19,11 @@ export function useStudents() {
 
     return adminApi.users.getStudents();
   }, [auth.role]);
-  const { data, loading, error, refetch } = useFetch<User[]>(fetchAll, [
-    fetchAll,
-  ]);
+  const { data, loading, error, refetch } = useFetch<User[]>(fetchAll);
 
   const importMutation = useMutation((rows: CreateUserDto[]) =>
     adminApi.users.importMany(rows),
   );
-  const enrollMutation = useMutation(async () => {
-    throw new Error("Enroll endpoint is not available yet");
-  });
 
   return useMemo(
     () => ({
@@ -37,15 +32,7 @@ export function useStudents() {
       error,
       refetch,
       importStudents: importMutation.execute,
-      enroll: enrollMutation.execute,
     }),
-    [
-      data,
-      enrollMutation.execute,
-      error,
-      importMutation.execute,
-      loading,
-      refetch,
-    ],
+    [data, error, importMutation.execute, loading, refetch],
   );
 }

@@ -46,19 +46,17 @@ export function useSwapRequests() {
   const { role } = auth;
 
   const fetchAll = useCallback(() => fetchByRole(role), [role]);
-  const { data, loading, error, refetch } = useFetch<SwapRequest[]>(fetchAll, [
-    fetchAll,
-  ]);
+  const { data, loading, error, refetch } = useFetch<SwapRequest[]>(fetchAll);
 
   const createMutation = useMutation((dto: CreateSwapRequestDto) =>
     swapRequestApi.student.create(dto),
   );
   const approveMutation = useMutation((id: string) =>
-    swapRequestApi.professor.approve(id),
+    swapRequestApi.requests.approve(id),
   );
   const rejectMutation = useMutation(
     (args: { id: string; dto: RejectSwapRequestDto }) =>
-      swapRequestApi.professor.reject(args.id, args.dto),
+      swapRequestApi.requests.reject(args.id, args.dto),
   );
   const confirmPartnerMutation = useMutation((id: string) =>
     swapRequestApi.student.confirmPartner(id),
