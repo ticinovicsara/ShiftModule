@@ -1,5 +1,6 @@
 import { SwapRequestStatus, UserRole } from "@repo/types";
 import { useContext, useState } from "react";
+import toast from "react-hot-toast";
 import { FilterTabs, SwapRequestCard } from "../../components/shared";
 import {
   Button,
@@ -69,6 +70,11 @@ export function RequestsPage({
     try {
       await approve(requestId);
       await refetch();
+      toast.success("Zahtjev je odobren.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Odobravanje nije uspjelo.",
+      );
     } finally {
       setActionId(null);
     }
@@ -79,6 +85,11 @@ export function RequestsPage({
     try {
       await reject({ id: requestId, dto: { reason: resolvedRejectReason } });
       await refetch();
+      toast.success("Zahtjev je odbijen.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Odbijanje nije uspjelo.",
+      );
     } finally {
       setActionId(null);
     }
@@ -110,7 +121,7 @@ export function RequestsPage({
   if (error || usersError) {
     return (
       <ErrorState
-        description={error ?? "Neuspjelo ucitavanje korisnickih podataka."}
+        description={error ?? "Neuspjelo učitavanje korisničkih podataka."}
         title={LABELS.common.retry}
       />
     );
@@ -171,7 +182,7 @@ export function RequestsPage({
         ))
       )}
       <Modal
-        description="Jeste li sigurni"
+        description="Jeste li sigurni? Ova akcija se ne može poništiti."
         footer={
           <div className="flex justify-end gap-2">
             <Button
@@ -195,9 +206,7 @@ export function RequestsPage({
         onClose={closeConfirmationModal}
         open={Boolean(pendingAction)}
         title="Potvrda"
-      >
-        <p className="text-sm text-slate-600">Jeste li sigurni</p>
-      </Modal>
+      ></Modal>
     </section>
   );
 }
