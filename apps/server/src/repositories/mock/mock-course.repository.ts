@@ -1,14 +1,17 @@
 import { randomUUID } from 'crypto';
 import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
-import { Course, SessionType } from '@repo/types';
+import { Course } from '@repo/types';
+import {
+  ICourseRepository,
+  CourseWithSessionTypes,
+} from '../interfaces/course.repository.interface';
 import { mockCourses } from './data/mock-courses.data';
 import { mockSessionTypes } from './data/mock-session-types.data';
 
-export type CourseWithSessionTypes = Course & {
-  sessionTypes: SessionType[];
-};
-
-export class MockCourseRepository extends BaseRepository<Course> {
+export class MockCourseRepository
+  extends BaseRepository<Course>
+  implements ICourseRepository
+{
   private store: Course[] = [...mockCourses];
 
   async findById(id: string): Promise<Course | null> {

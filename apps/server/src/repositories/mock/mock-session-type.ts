@@ -1,9 +1,13 @@
 import { randomUUID } from 'crypto';
 import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { SessionType } from '@repo/types';
+import { ISessionTypeRepository } from '../interfaces/session-type.repository.interface';
 import { mockSessionTypes } from './data/mock-session-types.data';
 
-export class MockSessionTypeRepository extends BaseRepository<SessionType> {
+export class MockSessionTypeRepository
+  extends BaseRepository<SessionType>
+  implements ISessionTypeRepository
+{
   private store: SessionType[] = [...mockSessionTypes];
 
   async findById(id: string): Promise<SessionType | null> {

@@ -7,4 +7,3 @@ export const mockStudyMajors: StudyMajor[] = [
     year: 1,
   },
 ];
-

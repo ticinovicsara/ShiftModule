@@ -1,9 +1,13 @@
 import { randomUUID } from 'crypto';
 import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { Group } from '@repo/types';
+import { IGroupRepository } from '../interfaces/group.repository.interface';
 import { mockGroups } from './data/mock-groups.data';
 
-export class MockGroupRepository extends BaseRepository<Group> {
+export class MockGroupRepository
+  extends BaseRepository<Group>
+  implements IGroupRepository
+{
   private store: Group[] = [...mockGroups];
 
   async findById(id: string): Promise<Group | null> {

@@ -15,3 +15,6 @@ export * from './mock-group.repository';
 export * from './mock-student-course.repository';
 export * from './mock-student-group.repository';
 export * from './mock-swap-request.repository';
+
+// Re-export CourseWithSessionTypes for backward compatibility
+export type { CourseWithSessionTypes } from '../interfaces/course.repository.interface';

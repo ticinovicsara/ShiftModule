@@ -1,9 +1,13 @@
 import { randomUUID } from 'crypto';
 import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { StudentCourse } from '@repo/types';
+import { IStudentCourseRepository } from '../interfaces/student-course.repository.interface';
 import { mockStudentCourses } from './data/mock-student-courses.data';
 
-export class MockStudentCourseRepository extends BaseRepository<StudentCourse> {
+export class MockStudentCourseRepository
+  extends BaseRepository<StudentCourse>
+  implements IStudentCourseRepository
+{
   private store: StudentCourse[] = [...mockStudentCourses];
 
   async findById(id: string): Promise<StudentCourse | null> {

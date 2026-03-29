@@ -1,9 +1,13 @@
 import { randomUUID } from 'crypto';
 import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { StudyMajor } from '@repo/types';
+import { IStudyMajorRepository } from '../interfaces/study-major.repository.interface';
 import { mockStudyMajors } from './data/mock-study-majors.data';
 
-export class MockStudyMajorRepository extends BaseRepository<StudyMajor> {
+export class MockStudyMajorRepository
+  extends BaseRepository<StudyMajor>
+  implements IStudyMajorRepository
+{
   private store: StudyMajor[] = [...mockStudyMajors];
 
   async findById(id: string): Promise<StudyMajor | null> {

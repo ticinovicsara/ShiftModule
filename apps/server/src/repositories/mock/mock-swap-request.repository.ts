@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { SwapRequest, SwapRequestStatus } from '@repo/types';
+import { ISwapRequestRepository } from '../interfaces/swap-request.repository.interface';
 import { mockSwapRequests } from './data/mock-swap-requests.data';
 
 type CreateSwapRequestInput = Omit<
@@ -8,7 +9,10 @@ type CreateSwapRequestInput = Omit<
   'id' | 'createdAt' | 'updatedAt'
 >;
 
-export class MockSwapRequestRepository extends BaseRepository<SwapRequest> {
+export class MockSwapRequestRepository
+  extends BaseRepository<SwapRequest>
+  implements ISwapRequestRepository
+{
   private store: SwapRequest[] = [...mockSwapRequests];
 
   async findById(id: string): Promise<SwapRequest | null> {

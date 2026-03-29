@@ -1,9 +1,13 @@
 import { randomUUID } from 'crypto';
 import { BaseRepository, FindManyArgs, matchesWhere } from '../base.repository';
 import { User, UserRole } from '@repo/types';
+import { IUserRepository } from '../interfaces/user.repository.interface';
 import { mockUsers } from './data/mock-users.data';
 
-export class MockUserRepository extends BaseRepository<User> {
+export class MockUserRepository
+  extends BaseRepository<User>
+  implements IUserRepository
+{
   private store: User[] = [...mockUsers];
 
   async findById(id: string): Promise<User | null> {
