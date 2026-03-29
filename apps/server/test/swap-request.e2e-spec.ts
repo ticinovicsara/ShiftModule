@@ -16,45 +16,45 @@ describe('swap-request module (e2e)', () => {
     await closeApp(ctx);
   });
 
-  it('GET /swap-request/student/requests should support happy + 401 + 403', async () => {
+  it('GET /swap-requests/student/requests should support happy + 401 + 403', async () => {
     const ok = await request(ctx.app.getHttpServer())
-      .get('/swap-request/student/requests')
+      .get('/swap-requests/student/requests')
       .set(authHeader(UserRole.STUDENT));
     expect(ok.status).toBe(200);
     expectEnvelope(ok.body);
 
     const noToken = await request(ctx.app.getHttpServer()).get(
-      '/swap-request/student/requests',
+      '/swap-requests/student/requests',
     );
     expect(noToken.status).toBe(401);
 
     const wrongRole = await request(ctx.app.getHttpServer())
-      .get('/swap-request/student/requests')
+      .get('/swap-requests/student/requests')
       .set(authHeader(UserRole.ADMIN));
     expect(wrongRole.status).toBe(403);
   });
 
-  it('POST /swap-request/student/requests should support 401 + 403 + 400 current behavior', async () => {
+  it('POST /swap-requests/student/requests should support 401 + 403 + 400 current behavior', async () => {
     const noToken = await request(ctx.app.getHttpServer())
-      .post('/swap-request/student/requests')
+      .post('/swap-requests/student/requests')
       .send({});
     expect(noToken.status).toBe(401);
 
     const wrongRole = await request(ctx.app.getHttpServer())
-      .post('/swap-request/student/requests')
+      .post('/swap-requests/student/requests')
       .set(authHeader(UserRole.ADMIN))
       .send({});
     expect(wrongRole.status).toBe(403);
 
     const malformed = await request(ctx.app.getHttpServer())
-      .post('/swap-request/student/requests')
+      .post('/swap-requests/student/requests')
       .set(authHeader(UserRole.STUDENT))
       .set('Content-Type', 'application/json')
       .send('{"courseId":');
     expect(malformed.status).toBe(400);
 
     const badRequest = await request(ctx.app.getHttpServer())
-      .post('/swap-request/student/requests')
+      .post('/swap-requests/student/requests')
       .set(authHeader(UserRole.STUDENT))
       .send({
         courseId: seedIds.courses.osnove1,
@@ -65,10 +65,10 @@ describe('swap-request module (e2e)', () => {
     expect([400, 404, 201]).toContain(badRequest.status);
   });
 
-  it('POST /swap-request/student/requests/:id/confirm-partner should support happy + 401 + 403 + 404', async () => {
+  it('POST /swap-requests/student/requests/:id/confirm-partner should support happy + 401 + 403 + 404', async () => {
     const ok = await request(ctx.app.getHttpServer())
       .post(
-        `/swap-request/student/requests/${seedIds.swapRequests.request1}/confirm-partner`,
+        `/swap-requests/student/requests/${seedIds.swapRequests.request1}/confirm-partner`,
       )
       .set(authHeader(UserRole.STUDENT));
     expect(ok.status).toBe(201);
@@ -76,45 +76,45 @@ describe('swap-request module (e2e)', () => {
 
     const notFound = await request(ctx.app.getHttpServer())
       .post(
-        `/swap-request/student/requests/${seedIds.notFound.swapRequest}/confirm-partner`,
+        `/swap-requests/student/requests/${seedIds.notFound.swapRequest}/confirm-partner`,
       )
       .set(authHeader(UserRole.STUDENT));
     expect(notFound.status).toBe(404);
 
     const noToken = await request(ctx.app.getHttpServer()).post(
-      `/swap-request/student/requests/${seedIds.swapRequests.request1}/confirm-partner`,
+      `/swap-requests/student/requests/${seedIds.swapRequests.request1}/confirm-partner`,
     );
     expect(noToken.status).toBe(401);
 
     const wrongRole = await request(ctx.app.getHttpServer())
       .post(
-        `/swap-request/student/requests/${seedIds.swapRequests.request1}/confirm-partner`,
+        `/swap-requests/student/requests/${seedIds.swapRequests.request1}/confirm-partner`,
       )
       .set(authHeader(UserRole.PROFESSOR));
     expect(wrongRole.status).toBe(403);
   });
 
-  it('GET /swap-request/professor/requests should support happy + 401 + 403', async () => {
+  it('GET /swap-requests/professor/requests should support happy + 401 + 403', async () => {
     const ok = await request(ctx.app.getHttpServer())
-      .get('/swap-request/professor/requests')
+      .get('/swap-requests/professor/requests')
       .query({ courseId: seedIds.courses.osnove1, mode: SwapMode.MANUAL })
       .set(authHeader(UserRole.PROFESSOR));
     expect(ok.status).toBe(200);
     expectEnvelope(ok.body);
 
     const noToken = await request(ctx.app.getHttpServer())
-      .get('/swap-request/professor/requests')
+      .get('/swap-requests/professor/requests')
       .query({ courseId: seedIds.courses.osnove1, mode: SwapMode.MANUAL });
     expect(noToken.status).toBe(401);
 
     const wrongRole = await request(ctx.app.getHttpServer())
-      .get('/swap-request/professor/requests')
+      .get('/swap-requests/professor/requests')
       .query({ courseId: seedIds.courses.osnove1, mode: SwapMode.MANUAL })
       .set(authHeader(UserRole.STUDENT));
     expect(wrongRole.status).toBe(403);
   });
 
-  it('GET /swap-request/professor/requests should reject access to another professor course', async () => {
+  it('GET /swap-requests/professor/requests should reject access to another professor course', async () => {
     const professor2Token = signToken(UserRole.PROFESSOR, {
       id: 'user-professor-2',
       email: 'profesor@fesb.hr',
@@ -123,62 +123,62 @@ describe('swap-request module (e2e)', () => {
     });
 
     const forbidden = await request(ctx.app.getHttpServer())
-      .get('/swap-request/professor/requests')
+      .get('/swap-requests/professor/requests')
       .query({ courseId: seedIds.courses.osnove1, mode: SwapMode.MANUAL })
       .set({ Authorization: `Bearer ${professor2Token}` });
 
     expect(forbidden.status).toBe(403);
   });
 
-  it('POST /swap-request/requests/:id/approve should support happy + 401 + 403 + 404', async () => {
+  it('POST /swap-requests/requests/:id/approve should support happy + 401 + 403 + 404', async () => {
     const ok = await request(ctx.app.getHttpServer())
-      .post(`/swap-request/requests/${seedIds.swapRequests.request2}/approve`)
+      .post(`/swap-requests/requests/${seedIds.swapRequests.request2}/approve`)
       .set(authHeader(UserRole.PROFESSOR));
     expect([200, 201, 400]).toContain(ok.status);
 
     const notFound = await request(ctx.app.getHttpServer())
-      .post(`/swap-request/requests/${seedIds.notFound.swapRequest}/approve`)
+      .post(`/swap-requests/requests/${seedIds.notFound.swapRequest}/approve`)
       .set(authHeader(UserRole.PROFESSOR));
     expect(notFound.status).toBe(404);
 
     const noToken = await request(ctx.app.getHttpServer()).post(
-      `/swap-request/requests/${seedIds.swapRequests.request2}/approve`,
+      `/swap-requests/requests/${seedIds.swapRequests.request2}/approve`,
     );
     expect(noToken.status).toBe(401);
 
     const wrongRole = await request(ctx.app.getHttpServer())
-      .post(`/swap-request/requests/${seedIds.swapRequests.request2}/approve`)
+      .post(`/swap-requests/requests/${seedIds.swapRequests.request2}/approve`)
       .set(authHeader(UserRole.STUDENT));
     expect(wrongRole.status).toBe(403);
   });
 
-  it('POST /swap-request/requests/:id/reject should support happy + 401 + 403 + 400 + 404', async () => {
+  it('POST /swap-requests/requests/:id/reject should support happy + 401 + 403 + 400 + 404', async () => {
     const ok = await request(ctx.app.getHttpServer())
-      .post(`/swap-request/requests/${seedIds.swapRequests.request1}/reject`)
+      .post(`/swap-requests/requests/${seedIds.swapRequests.request1}/reject`)
       .set(authHeader(UserRole.PROFESSOR))
       .send({ reason: 'No seats' });
     expect([200, 201, 400]).toContain(ok.status);
 
     const malformed = await request(ctx.app.getHttpServer())
-      .post(`/swap-request/requests/${seedIds.swapRequests.request1}/reject`)
+      .post(`/swap-requests/requests/${seedIds.swapRequests.request1}/reject`)
       .set(authHeader(UserRole.PROFESSOR))
       .set('Content-Type', 'application/json')
       .send('{"reason":');
     expect(malformed.status).toBe(400);
 
     const notFound = await request(ctx.app.getHttpServer())
-      .post(`/swap-request/requests/${seedIds.notFound.swapRequest}/reject`)
+      .post(`/swap-requests/requests/${seedIds.notFound.swapRequest}/reject`)
       .set(authHeader(UserRole.PROFESSOR))
       .send({ reason: 'x' });
     expect(notFound.status).toBe(404);
 
     const noToken = await request(ctx.app.getHttpServer()).post(
-      `/swap-request/requests/${seedIds.swapRequests.request1}/reject`,
+      `/swap-requests/requests/${seedIds.swapRequests.request1}/reject`,
     );
     expect(noToken.status).toBe(401);
 
     const wrongRole = await request(ctx.app.getHttpServer())
-      .post(`/swap-request/requests/${seedIds.swapRequests.request1}/reject`)
+      .post(`/swap-requests/requests/${seedIds.swapRequests.request1}/reject`)
       .set(authHeader(UserRole.STUDENT))
       .send({ reason: 'x' });
     expect(wrongRole.status).toBe(403);
