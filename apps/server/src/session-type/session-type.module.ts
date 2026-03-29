@@ -5,7 +5,13 @@ import { MockSessionTypeRepository } from 'src/repositories';
 
 @Module({
   controllers: [SessionTypeController],
-  providers: [SessionTypeService, MockSessionTypeRepository],
+  providers: [
+    SessionTypeService,
+    {
+      provide: 'ISessionTypeRepository',
+      useClass: MockSessionTypeRepository,
+    },
+  ],
   exports: [SessionTypeService],
 })
 export class SessionTypeModule {}

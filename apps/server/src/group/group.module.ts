@@ -8,7 +8,17 @@ import {
 
 @Module({
   controllers: [GroupController],
-  providers: [GroupService, MockGroupRepository, MockStudentGroupRepository],
+  providers: [
+    GroupService,
+    {
+      provide: 'IGroupRepository',
+      useClass: MockGroupRepository,
+    },
+    {
+      provide: 'IStudentGroupRepository',
+      useClass: MockStudentGroupRepository,
+    },
+  ],
   exports: [GroupService],
 })
 export class GroupModule {}

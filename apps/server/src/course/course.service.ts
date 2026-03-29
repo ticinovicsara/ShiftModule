@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { MockCourseRepository } from '../repositories/mock/mock-course.repository';
-import { MockStudentCourseRepository } from '../repositories/mock/mock-student-course.repository';
-import { MockSessionTypeRepository } from '../repositories/mock/mock-session-type';
-import { MockGroupRepository } from '../repositories/mock/mock-group.repository';
-import { MockStudentGroupRepository } from '../repositories/mock/mock-student-group.repository';
-import { MockUserRepository } from '../repositories/mock/mock-user.repository';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import type {
+  ICourseRepository,
+  IGroupRepository,
+  ISessionTypeRepository,
+  IStudentCourseRepository,
+  IStudentGroupRepository,
+  IUserRepository,
+} from 'src/repositories';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { SwapMode, SwapRequestStatus } from '@repo/types';
@@ -14,12 +16,15 @@ import { SwapRequestService } from '../swap-request/swap-request.service';
 @Injectable()
 export class CourseService {
   constructor(
-    private readonly courseRepo: MockCourseRepository,
-    private readonly studentCourseRepo: MockStudentCourseRepository,
-    private readonly sessionTypeRepo: MockSessionTypeRepository,
-    private readonly groupRepo: MockGroupRepository,
-    private readonly studentGroupRepo: MockStudentGroupRepository,
-    private readonly userRepo: MockUserRepository,
+    @Inject('ICourseRepository') private readonly courseRepo: ICourseRepository,
+    @Inject('IStudentCourseRepository')
+    private readonly studentCourseRepo: IStudentCourseRepository,
+    @Inject('ISessionTypeRepository')
+    private readonly sessionTypeRepo: ISessionTypeRepository,
+    @Inject('IGroupRepository') private readonly groupRepo: IGroupRepository,
+    @Inject('IStudentGroupRepository')
+    private readonly studentGroupRepo: IStudentGroupRepository,
+    @Inject('IUserRepository') private readonly userRepo: IUserRepository,
     private readonly swapRequestService: SwapRequestService,
   ) {}
 
@@ -52,13 +57,15 @@ export class CourseService {
     const courses = await this.findCoursesByProfessor(professorId);
     const courseIds = courses.map((course) => course.id);
 
-    const studentCourses = await Promise.all(
+    const studentCoursesByCourse = await Promise.all(
       courseIds.map((courseId) =>
         this.studentCourseRepo.findByCourse(courseId),
       ),
     );
     const uniqueStudentIds = new Set(
-      studentCourses.flat().map((studentCourse) => studentCourse.studentId),
+      studentCoursesByCourse
+        .flat()
+        .map((studentCourse) => studentCourse.studentId),
     );
 
     const requestsByCourse = await Promise.all(
@@ -130,25 +137,23 @@ export class CourseService {
           (group) => group.id === currentStudentGroup?.groupId,
         );
 
-        const assignments = studentGroups
-          .map((studentGroup) => {
-            const group = groupsWithActualCounts.find(
-              (entry) => entry.id === studentGroup.groupId,
-            );
-            if (!group) {
-              return null;
-            }
-
-            return {
-              sessionTypeId: group.sessionTypeId,
-              sessionKind: sessionTypeKindById.get(group.sessionTypeId),
-              groupId: group.id,
-              groupName: group.name,
-            };
-          })
-          .filter((assignment): assignment is NonNullable<typeof assignment> =>
-            Boolean(assignment),
+        const assignments = studentGroups.map((studentGroup) => {
+          const group = groupsWithActualCounts.find(
+            (entry) => entry.id === studentGroup.groupId,
           );
+          if (!group) {
+            throw new NotFoundException(
+              `Group ${studentGroup.groupId} not found for student assignment`,
+            );
+          }
+
+          return {
+            sessionTypeId: group.sessionTypeId,
+            sessionKind: sessionTypeKindById.get(group.sessionTypeId),
+            groupId: group.id,
+            groupName: group.name,
+          };
+        });
 
         return {
           id: enrollment.studentId,

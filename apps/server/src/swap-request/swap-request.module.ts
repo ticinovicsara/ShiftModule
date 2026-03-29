@@ -7,22 +7,41 @@ import { MockGroupRepository } from '../repositories/mock/mock-group.repository'
 import { MockStudentCourseRepository } from '../repositories/mock/mock-student-course.repository';
 import { MockCourseRepository } from '../repositories/mock/mock-course.repository';
 import { MockUserRepository } from '../repositories/mock/mock-user.repository';
-import { MockSessionTypeRepository } from 'src/repositories';
+import { MockSessionTypeRepository } from '../repositories';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
+  imports: [NotificationModule],
   controllers: [SwapRequestController],
   providers: [
     SwapRequestService,
-    MockSwapRequestRepository,
-    MockStudentGroupRepository,
-    MockGroupRepository,
-    MockStudentCourseRepository,
-    MockCourseRepository,
-    MockUserRepository,
-    MockSessionTypeRepository,
     {
-      provide: 'UserRepository',
+      provide: 'ISwapRequestRepository',
+      useClass: MockSwapRequestRepository,
+    },
+    {
+      provide: 'IStudentGroupRepository',
+      useClass: MockStudentGroupRepository,
+    },
+    {
+      provide: 'IGroupRepository',
+      useClass: MockGroupRepository,
+    },
+    {
+      provide: 'IStudentCourseRepository',
+      useClass: MockStudentCourseRepository,
+    },
+    {
+      provide: 'ICourseRepository',
+      useClass: MockCourseRepository,
+    },
+    {
+      provide: 'IUserRepository',
       useClass: MockUserRepository,
+    },
+    {
+      provide: 'ISessionTypeRepository',
+      useClass: MockSessionTypeRepository,
     },
   ],
   exports: [SwapRequestService],

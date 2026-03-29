@@ -4,10 +4,8 @@ import {
   BadRequestException,
   Inject,
 } from '@nestjs/common';
-import {
-  MockGroupRepository,
-  MockStudentGroupRepository,
-} from '../repositories';
+import type { IGroupRepository } from '../repositories/interfaces/group.repository.interface';
+import type { IStudentGroupRepository } from '../repositories/interfaces/student-group.repository.interface';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { ReportIssueDto } from './dto/report-issue.dto';
@@ -15,9 +13,10 @@ import { ReportIssueDto } from './dto/report-issue.dto';
 @Injectable()
 export class GroupService {
   constructor(
-    private readonly groupRepo: MockGroupRepository,
-    @Inject(MockStudentGroupRepository)
-    private readonly studentGroupRepo: MockStudentGroupRepository,
+    @Inject('IGroupRepository')
+    private readonly groupRepo: IGroupRepository,
+    @Inject('IStudentGroupRepository')
+    private readonly studentGroupRepo: IStudentGroupRepository,
   ) {}
 
   async findAll() {
@@ -49,11 +48,9 @@ export class GroupService {
   }
 
   async updateCapacity(id: string, capacity: number) {
-    const group = await this.findById(id);
-    if (capacity < group.currentCount) {
-      throw new BadRequestException(
-        `Capacity cannot be less than current count (${group.currentCount})`,
-      );
+    await this.findById(id);
+    if (capacity < 0) {
+      throw new BadRequestException(`Capacity cannot be negative`);
     }
     return this.groupRepo.update(id, { capacity });
   }
@@ -98,12 +95,14 @@ export class GroupService {
             studentGroup.groupId,
           );
           if (!currentGroup) {
-            return null;
+            throw new NotFoundException(
+              `Group ${studentGroup.groupId} not found for student ${studentId}`,
+            );
           }
 
           return currentGroup.sessionTypeId === targetGroup.sessionTypeId
             ? studentGroup
-            : null;
+            : undefined;
         }),
       )
     ).find((entry): entry is NonNullable<typeof entry> => Boolean(entry));
@@ -127,7 +126,6 @@ export class GroupService {
       groupId: newGroupId,
     });
 
-    // Decrement count in old group, increment in new group
     await this.decrementCount(oldGroupId);
     await this.incrementCount(newGroupId);
 

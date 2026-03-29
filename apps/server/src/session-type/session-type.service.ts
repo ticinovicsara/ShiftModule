@@ -1,11 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { MockSessionTypeRepository } from '../repositories';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import type { ISessionTypeRepository } from '../repositories/interfaces/session-type.repository.interface';
 import { CreateSessionTypeDto } from './dto/create-session-type.dto';
 import { UpdateSessionTypeDto } from './dto/update-session-type.dto';
 
 @Injectable()
 export class SessionTypeService {
-  constructor(private readonly sessionTypeRepo: MockSessionTypeRepository) {}
+  constructor(
+    @Inject('ISessionTypeRepository')
+    private readonly sessionTypeRepo: ISessionTypeRepository,
+  ) {}
 
   async findAll() {
     return this.sessionTypeRepo.findMany();

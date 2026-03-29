@@ -5,7 +5,13 @@ import { MockStudyMajorRepository } from 'src/repositories';
 
 @Module({
   controllers: [StudyMajorController],
-  providers: [StudyMajorService, MockStudyMajorRepository],
+  providers: [
+    StudyMajorService,
+    {
+      provide: 'IStudyMajorRepository',
+      useClass: MockStudyMajorRepository,
+    },
+  ],
   exports: [StudyMajorService],
 })
 export class StudyMajorModule {}

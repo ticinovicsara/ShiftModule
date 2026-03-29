@@ -1,11 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { MockStudyMajorRepository } from '../repositories/mock/mock-study-major.repository';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import type { IStudyMajorRepository } from '../repositories/interfaces/study-major.repository.interface';
 import { CreateStudyMajorDto } from './dto/create-study-major.dto';
 import { UpdateStudyMajorDto } from './dto/update-study-major.dto';
 
 @Injectable()
 export class StudyMajorService {
-  constructor(private readonly studyMajorRepo: MockStudyMajorRepository) {}
+  constructor(
+    @Inject('IStudyMajorRepository')
+    private readonly studyMajorRepo: IStudyMajorRepository,
+  ) {}
 
   async findAll() {
     return this.studyMajorRepo.findMany();

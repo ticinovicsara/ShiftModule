@@ -6,15 +6,7 @@ import {
   Inject,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  MockCourseRepository,
-  MockUserRepository,
-  MockSwapRequestRepository,
-  MockStudentGroupRepository,
-  MockGroupRepository,
-  MockSessionTypeRepository,
-  MockStudentCourseRepository,
-} from '../repositories';
+import { NotificationService } from '../notification/notification.service';
 import {
   StudentSwapViewState,
   SessionKind,
@@ -26,17 +18,36 @@ import {
 } from '@repo/types';
 import { CreateSwapRequestDto } from './dto/create-swap-request.dto';
 import { RejectSwapRequestDto } from './dto/reject-swap-request.dto';
+import type {
+  ISwapRequestRepository,
+  IStudentGroupRepository,
+  IGroupRepository,
+  ISessionTypeRepository,
+  IStudentCourseRepository,
+  ICourseRepository,
+  IUserRepository,
+} from 'src/repositories';
 
 @Injectable()
 export class SwapRequestService {
+  private static readonly SOLO_MATCH_WINDOW_DAYS = 7;
+
   constructor(
-    private readonly swapRequestRepo: MockSwapRequestRepository,
-    private readonly studentGroupRepo: MockStudentGroupRepository,
-    private readonly groupRepo: MockGroupRepository,
-    private readonly sessionTypeRepo: MockSessionTypeRepository,
-    private readonly studentCourseRepo: MockStudentCourseRepository,
-    private readonly courseRepo: MockCourseRepository,
-    @Inject('UserRepository') private readonly userRepo: MockUserRepository,
+    @Inject('ISwapRequestRepository')
+    private readonly swapRequestRepo: ISwapRequestRepository,
+    @Inject('IStudentGroupRepository')
+    private readonly studentGroupRepo: IStudentGroupRepository,
+    @Inject('IGroupRepository')
+    private readonly groupRepo: IGroupRepository,
+    @Inject('ISessionTypeRepository')
+    private readonly sessionTypeRepo: ISessionTypeRepository,
+    @Inject('IStudentCourseRepository')
+    private readonly studentCourseRepo: IStudentCourseRepository,
+    @Inject('ICourseRepository')
+    private readonly courseRepo: ICourseRepository,
+    @Inject('IUserRepository')
+    private readonly userRepo: IUserRepository,
+    private readonly notificationService: NotificationService,
   ) {}
 
   private requireStudentId(studentId?: string) {
@@ -48,6 +59,119 @@ export class SwapRequestService {
 
   private normalizeEmail(email?: string) {
     return (email ?? '').trim().toLowerCase();
+  }
+
+  private calculateMatchDeadline(fromDate: Date = new Date()): Date {
+    return new Date(
+      fromDate.getTime() +
+        SwapRequestService.SOLO_MATCH_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+    );
+  }
+
+  private isMatchDeadlinePassed(request: SwapRequest, now: Date): boolean {
+    const fallbackDeadline = this.calculateMatchDeadline(request.createdAt);
+    const deadline = request.matchDeadline ?? fallbackDeadline;
+    return deadline.getTime() <= now.getTime();
+  }
+
+  private async findReciprocalSoloMatch(
+    request: SwapRequest,
+  ): Promise<SwapRequest | null> {
+    const candidates = await this.swapRequestRepo.findMany({
+      where: {
+        courseId: request.courseId,
+        sessionTypeId: request.sessionTypeId,
+        requestType: SwapRequestType.SOLO,
+      },
+    });
+
+    return (
+      candidates.find(
+        (candidate) =>
+          candidate.id !== request.id &&
+          candidate.studentId !== request.studentId &&
+          (candidate.status === SwapRequestStatus.PENDING ||
+            candidate.status === SwapRequestStatus.WAITING_FOR_MATCH) &&
+          candidate.currentGroupId === request.desiredGroupId &&
+          candidate.desiredGroupId === request.currentGroupId,
+      ) ?? null
+    );
+  }
+
+  private async finalizeSoloAutoMatch(
+    request: SwapRequest,
+    matchedRequest: SwapRequest,
+  ): Promise<SwapRequest> {
+    await this.executeSwap(
+      request.studentId,
+      request.currentGroupId,
+      request.desiredGroupId,
+    );
+    await this.executeSwap(
+      matchedRequest.studentId,
+      matchedRequest.currentGroupId,
+      matchedRequest.desiredGroupId,
+    );
+
+    const [updatedRequest, updatedMatchedRequest] = await Promise.all([
+      this.swapRequestRepo.update(request.id, {
+        status: SwapRequestStatus.AUTO_RESOLVED,
+        satisfiedWish: true,
+        matchDeadline: undefined,
+      }),
+      this.swapRequestRepo.update(matchedRequest.id, {
+        status: SwapRequestStatus.AUTO_RESOLVED,
+        satisfiedWish: true,
+        matchDeadline: undefined,
+      }),
+    ]);
+
+    const [student, matchedStudent, desiredGroup, matchedDesiredGroup] =
+      await Promise.all([
+        this.userRepo.findById(updatedRequest.studentId),
+        this.userRepo.findById(updatedMatchedRequest.studentId),
+        this.groupRepo.findById(updatedRequest.desiredGroupId),
+        this.groupRepo.findById(updatedMatchedRequest.desiredGroupId),
+      ]);
+
+    if (student) {
+      await this.notificationService.sendSwapAutoResolved(
+        student.email,
+        desiredGroup?.name ?? updatedRequest.desiredGroupId,
+      );
+    }
+
+    if (matchedStudent) {
+      await this.notificationService.sendSwapAutoResolved(
+        matchedStudent.email,
+        matchedDesiredGroup?.name ?? updatedMatchedRequest.desiredGroupId,
+      );
+    }
+
+    return updatedRequest;
+  }
+
+  private async promoteExpiredWaitingRequests(
+    requests: SwapRequest[],
+  ): Promise<SwapRequest[]> {
+    const now = new Date();
+    const promoted = await Promise.all(
+      requests.map(async (request) => {
+        if (
+          request.status !== SwapRequestStatus.WAITING_FOR_MATCH ||
+          !this.isMatchDeadlinePassed(request, now)
+        ) {
+          return request;
+        }
+
+        return this.swapRequestRepo.update(request.id, {
+          status: SwapRequestStatus.PENDING,
+          matchDeadline: undefined,
+        });
+      }),
+    );
+
+    return promoted;
   }
 
   private isPaired(request: SwapRequest) {
@@ -223,6 +347,10 @@ export class SwapRequestService {
     dto: CreateSwapRequestDto,
   ) {
     const resolvedStudentId = this.requireStudentId(studentId);
+    const requester = await this.userRepo.findById(resolvedStudentId);
+    if (!requester) {
+      throw new NotFoundException('Student not found');
+    }
 
     const enrollments =
       await this.studentCourseRepo.findByStudent(resolvedStudentId);
@@ -236,7 +364,8 @@ export class SwapRequestService {
       (r) =>
         r.courseId === dto.courseId &&
         r.sessionTypeId === dto.sessionTypeId &&
-        r.status === SwapRequestStatus.PENDING,
+        (r.status === SwapRequestStatus.PENDING ||
+          r.status === SwapRequestStatus.WAITING_FOR_MATCH),
     );
     if (hasPending) {
       throw new ConflictException(
@@ -361,10 +490,43 @@ export class SwapRequestService {
       reason: dto.reason,
       partnerEmail: partnerEmail || undefined,
       partnerConfirmed: requestType === SwapRequestType.SOLO,
-      status: SwapRequestStatus.PENDING,
+      status:
+        requestType === SwapRequestType.SOLO
+          ? SwapRequestStatus.WAITING_FOR_MATCH
+          : SwapRequestStatus.PENDING,
       priorityScore,
       satisfiedWish: undefined,
+      matchDeadline:
+        requestType === SwapRequestType.SOLO
+          ? this.calculateMatchDeadline()
+          : undefined,
     });
+
+    if (requestType === SwapRequestType.SOLO) {
+      const matchedRequest = await this.findReciprocalSoloMatch(request);
+      if (matchedRequest) {
+        const autoCompleted = await this.finalizeSoloAutoMatch(
+          request,
+          matchedRequest,
+        );
+        const enrichedAutoCompleted =
+          await this.enrichSwapRequestWithStudent(autoCompleted);
+        return {
+          ...enrichedAutoCompleted,
+          processingMode: this.getProcessingMode(enrichedAutoCompleted),
+        };
+      }
+    }
+
+    if (requestType === SwapRequestType.PAIRED && partnerEmail) {
+      await this.notificationService.sendPartnerSwapRequest(
+        partnerEmail,
+        request.id,
+        currentGroup.name,
+        desiredGroup.name,
+        `${requester.firstName} ${requester.lastName}`,
+      );
+    }
 
     await this.tryAutoProcess(request.id);
     const enriched = await this.enrichSwapRequestWithStudent(request);
@@ -406,6 +568,19 @@ export class SwapRequestService {
       partnerConfirmed: true,
       partnerStudentId: resolvedStudentId,
     });
+
+    const requester = await this.userRepo.findById(request.studentId);
+    if (requester) {
+      const desiredGroup = await this.groupRepo.findById(
+        request.desiredGroupId,
+      );
+      // Reuse existing template to notify requester that partner-side step completed.
+      await this.notificationService.sendSwapApproved(
+        requester.email,
+        desiredGroup?.name ?? request.desiredGroupId,
+      );
+    }
+
     await this.tryAutoProcess(requestId);
     return { message: 'Partner confirmed' };
   }
@@ -480,8 +655,15 @@ export class SwapRequestService {
             allowedCourseIds.includes(request.courseId),
           );
 
+    const hydratedRequests =
+      await this.promoteExpiredWaitingRequests(scopedRequests);
+
     const visibleRequests = this.dedupeStaffCards(
-      scopedRequests.filter((request) => this.isVisibleToStaff(request)),
+      hydratedRequests.filter(
+        (request) =>
+          request.status !== SwapRequestStatus.WAITING_FOR_MATCH &&
+          this.isVisibleToStaff(request),
+      ),
     );
 
     let filtered: SwapRequest[] = [];
@@ -526,8 +708,11 @@ export class SwapRequestService {
       return this.enrichSwapRequestWithStudent(request);
     }
 
-    const shouldExecuteSwap =
-      request.status === SwapRequestStatus.PENDING || !request.satisfiedWish;
+    if (request.status !== SwapRequestStatus.PENDING) {
+      throw new BadRequestException('Only pending requests can be approved');
+    }
+
+    const shouldExecuteSwap = request.status === SwapRequestStatus.PENDING;
 
     if (shouldExecuteSwap) {
       if (request.requestType === SwapRequestType.PAIRED) {
@@ -557,6 +742,17 @@ export class SwapRequestService {
       satisfiedWish: true,
     });
 
+    const student = await this.userRepo.findById(updated.studentId);
+    if (student) {
+      const desiredGroup = await this.groupRepo.findById(
+        updated.desiredGroupId,
+      );
+      await this.notificationService.sendSwapApproved(
+        student.email,
+        desiredGroup?.name ?? updated.desiredGroupId,
+      );
+    }
+
     return this.enrichSwapRequestWithStudent(updated);
   }
 
@@ -579,6 +775,14 @@ export class SwapRequestService {
       satisfiedWish: false,
       reason: dto.reason ?? request.reason,
     });
+
+    const student = await this.userRepo.findById(updated.studentId);
+    if (student) {
+      await this.notificationService.sendSwapRejected(
+        student.email,
+        updated.reason,
+      );
+    }
 
     return this.enrichSwapRequestWithStudent(updated);
   }

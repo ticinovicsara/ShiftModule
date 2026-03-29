@@ -14,12 +14,30 @@ import { SwapRequestModule } from '../swap-request/swap-request.module';
   controllers: [CourseController],
   providers: [
     CourseService,
-    MockCourseRepository,
-    MockStudentCourseRepository,
-    MockSessionTypeRepository,
-    MockGroupRepository,
-    MockStudentGroupRepository,
-    MockUserRepository,
+    {
+      provide: 'ICourseRepository',
+      useClass: MockCourseRepository,
+    },
+    {
+      provide: 'IStudentCourseRepository',
+      useClass: MockStudentCourseRepository,
+    },
+    {
+      provide: 'ISessionTypeRepository',
+      useClass: MockSessionTypeRepository,
+    },
+    {
+      provide: 'IGroupRepository',
+      useClass: MockGroupRepository,
+    },
+    {
+      provide: 'IStudentGroupRepository',
+      useClass: MockStudentGroupRepository,
+    },
+    {
+      provide: 'IUserRepository',
+      useClass: MockUserRepository,
+    },
   ],
   exports: [CourseService],
 })
