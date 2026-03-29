@@ -12,6 +12,7 @@ import { StudyMajorModule } from './study-major';
 import { SwapRequestModule } from './swap-request';
 import { UserModule } from './user';
 import { AppController } from './app.controller';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { AppController } from './app.controller';
     AdminModule,
     ProfessorModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [AppService],
 })
 export class AppModule {}
