@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
+import { AppConfig } from '../config/app.config';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -14,7 +15,7 @@ export class AuthGuard implements CanActivate {
     const token = request.headers.authorization?.split(' ')[1];
     if (!token) throw new UnauthorizedException('No token provided');
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET ?? 'secret');
+      const payload = jwt.verify(token, AppConfig.jwt.secret);
       request['user'] = payload;
       return true;
     } catch {

@@ -5,7 +5,13 @@ import { MockUserRepository } from '../repositories';
 
 @Module({
   controllers: [UserController],
-  providers: [UserService, MockUserRepository],
+  providers: [
+    UserService,
+    {
+      provide: 'IUserRepository',
+      useClass: MockUserRepository,
+    },
+  ],
   exports: [UserService],
 })
 export class UserModule {}

@@ -1,16 +1,19 @@
 import {
   Injectable,
+  Inject,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { MockUserRepository } from '../repositories/mock/mock-user.repository';
+import type { IUserRepository } from 'src/repositories';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from '@repo/types';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepo: MockUserRepository) {}
+  constructor(
+    @Inject('IUserRepository') private readonly userRepo: IUserRepository,
+  ) {}
 
   async findAll() {
     return this.userRepo.findMany();

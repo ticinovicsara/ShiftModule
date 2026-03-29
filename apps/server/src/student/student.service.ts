@@ -1,23 +1,29 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import {
-  MockStudentCourseRepository,
-  MockStudentGroupRepository,
-  MockSwapRequestRepository,
-  MockCourseRepository,
-  MockGroupRepository,
-  MockSessionTypeRepository,
-} from '../repositories';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { SessionKind, SwapRequestStatus } from '@repo/types';
+import type {
+  IStudentCourseRepository,
+  IStudentGroupRepository,
+  ISwapRequestRepository,
+  ICourseRepository,
+  IGroupRepository,
+  ISessionTypeRepository,
+} from 'src/repositories';
 
 @Injectable()
 export class StudentService {
   constructor(
-    private readonly studentCourseRepo: MockStudentCourseRepository,
-    private readonly studentGroupRepo: MockStudentGroupRepository,
-    private readonly swapRequestRepo: MockSwapRequestRepository,
-    private readonly courseRepo: MockCourseRepository,
-    private readonly groupRepo: MockGroupRepository,
-    private readonly sessionTypeRepo: MockSessionTypeRepository,
+    @Inject('IStudentCourseRepository')
+    private readonly studentCourseRepo: IStudentCourseRepository,
+    @Inject('IStudentGroupRepository')
+    private readonly studentGroupRepo: IStudentGroupRepository,
+    @Inject('ISwapRequestRepository')
+    private readonly swapRequestRepo: ISwapRequestRepository,
+    @Inject('ICourseRepository')
+    private readonly courseRepo: ICourseRepository,
+    @Inject('IGroupRepository')
+    private readonly groupRepo: IGroupRepository,
+    @Inject('ISessionTypeRepository')
+    private readonly sessionTypeRepo: ISessionTypeRepository,
   ) {}
 
   private async getGroupsForCourse(courseId: string) {

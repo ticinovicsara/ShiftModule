@@ -14,12 +14,30 @@ import {
   controllers: [StudentController],
   providers: [
     StudentService,
-    MockStudentCourseRepository,
-    MockStudentGroupRepository,
-    MockSwapRequestRepository,
-    MockCourseRepository,
-    MockGroupRepository,
-    MockSessionTypeRepository,
+    {
+      provide: 'IStudentCourseRepository',
+      useClass: MockStudentCourseRepository,
+    },
+    {
+      provide: 'IStudentGroupRepository',
+      useClass: MockStudentGroupRepository,
+    },
+    {
+      provide: 'ISwapRequestRepository',
+      useClass: MockSwapRequestRepository,
+    },
+    {
+      provide: 'ICourseRepository',
+      useClass: MockCourseRepository,
+    },
+    {
+      provide: 'IGroupRepository',
+      useClass: MockGroupRepository,
+    },
+    {
+      provide: 'ISessionTypeRepository',
+      useClass: MockSessionTypeRepository,
+    },
   ],
 })
 export class StudentModule {}
