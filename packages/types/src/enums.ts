@@ -22,6 +22,7 @@ export enum StudentGroupStatus {
 }
 
 export enum SwapRequestStatus {
+  WAITING_FOR_MATCH = "WAITING_FOR_MATCH",
   PENDING = "PENDING",
   APPROVED = "APPROVED",
   REJECTED = "REJECTED",

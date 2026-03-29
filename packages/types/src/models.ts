@@ -86,6 +86,7 @@ export interface SwapRequest {
   studentViewState?: StudentSwapViewState;
   priorityScore?: number;
   satisfiedWish?: boolean;
+  matchDeadline?: Date;
   createdAt: Date;
   updatedAt: Date;
   student?: {
