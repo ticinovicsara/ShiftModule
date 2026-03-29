@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { Button, Input } from "../../components";
+import { Button, Input } from "../../components/ui";
 import { LABELS } from "../../constants/labels";
 import { ROUTE_PATHS } from "../../constants";
 import { useFetch } from "../../hooks/useFetch";

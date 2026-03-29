@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { ApiError } from "../../api/client";
-import { Button, Input } from "../../components";
+import { Button, Input } from "../../components/ui";
 import { DEFAULT_ROUTE_BY_ROLE, LABELS } from "../../constants";
 import { AuthContext } from "../../context/AuthContext";
 

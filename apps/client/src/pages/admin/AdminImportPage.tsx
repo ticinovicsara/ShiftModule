@@ -1,6 +1,7 @@
 import type { CreateUserDto } from "@repo/types";
 import { UserRole } from "@repo/types";
 import { useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { ImportPreviewTable } from "../../components/shared";
 import {
   Button,
@@ -118,7 +119,16 @@ export function AdminImportPage() {
       return;
     }
 
-    await importStudents(validRows);
+    try {
+      await importStudents(validRows);
+      toast.success("Uvoz studenata je uspješno dovršen.");
+    } catch (importError) {
+      toast.error(
+        importError instanceof Error
+          ? importError.message
+          : "Uvoz studenata nije uspio.",
+      );
+    }
   };
 
   return (

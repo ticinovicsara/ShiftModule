@@ -8,6 +8,7 @@ export interface StatusBadgeProps {
 
 const badgeVariantByStatus = {
   [SwapRequestStatus.PENDING]: "pending",
+  [SwapRequestStatus.WAITING_FOR_MATCH]: "pending",
   [SwapRequestStatus.APPROVED]: "approved",
   [SwapRequestStatus.REJECTED]: "rejected",
   [SwapRequestStatus.AUTO_RESOLVED]: "auto",
@@ -18,6 +19,7 @@ const badgeVariantByStatus = {
 
 const labelByStatus = {
   [SwapRequestStatus.PENDING]: LABELS.status.pending,
+  [SwapRequestStatus.WAITING_FOR_MATCH]: LABELS.status.pending,
   [SwapRequestStatus.APPROVED]: LABELS.status.approved,
   [SwapRequestStatus.REJECTED]: LABELS.status.rejected,
   [SwapRequestStatus.AUTO_RESOLVED]: LABELS.status.autoResolved,

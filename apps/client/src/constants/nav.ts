@@ -95,6 +95,11 @@ export const NAVIGATION_CONFIG: Record<
         icon: "students",
       },
       {
+        label: LABELS.pages.adminImport,
+        path: ROUTE_PATHS.admin.studentsImport,
+        icon: "reports",
+      },
+      {
         label: LABELS.nav.requests,
         path: ROUTE_PATHS.admin.requests,
         icon: "requests",
@@ -124,9 +129,9 @@ export const NAVIGATION_CONFIG: Record<
         icon: "requests",
       },
       {
-        label: LABELS.nav.groups,
+        label: LABELS.nav.courses,
         path: ROUTE_PATHS.professor.courses,
-        icon: "groups",
+        icon: "courses",
       },
     ],
     desktop: [
@@ -141,9 +146,9 @@ export const NAVIGATION_CONFIG: Record<
         icon: "requests",
       },
       {
-        label: LABELS.nav.groups,
+        label: LABELS.nav.courses,
         path: ROUTE_PATHS.professor.courses,
-        icon: "groups",
+        icon: "courses",
       },
       {
         label: LABELS.nav.settings,

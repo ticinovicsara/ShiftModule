@@ -12,8 +12,8 @@ import {
   OverviewSection,
   RequestsSection,
   StudentsSection,
-} from "../../components";
-import { ErrorState, Spinner } from "../../components";
+} from "../../components/shared";
+import { ErrorState, Spinner } from "../../components/ui";
 import { COURSE_TABS, LABELS } from "../../constants";
 import {
   useCourseManagementActions,

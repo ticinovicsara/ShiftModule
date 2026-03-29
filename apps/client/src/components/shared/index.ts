@@ -11,5 +11,4 @@ export * from "./SearchField";
 export * from "./SidebarNav";
 export * from "./StatusBadge";
 export * from "./StudentMoveRow";
-export * from "./SwapProgress";
 export * from "./SwapRequestCard";
