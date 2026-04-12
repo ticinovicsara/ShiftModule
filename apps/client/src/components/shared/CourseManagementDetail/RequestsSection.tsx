@@ -16,6 +16,10 @@ interface RequestsSectionProps {
   actionId: string | null;
   onApprove: (requestId: string) => Promise<void>;
   onReject: (requestId: string) => Promise<void>;
+  onApproveAllPending?: () => Promise<void>;
+  onRejectAllPending?: () => Promise<void>;
+  showPriorityInfo?: boolean;
+  showSatisfactionInfo?: boolean;
 }
 
 export function RequestsSection({
@@ -25,7 +29,15 @@ export function RequestsSection({
   actionId,
   onApprove,
   onReject,
+  onApproveAllPending,
+  onRejectAllPending,
+  showPriorityInfo = false,
+  showSatisfactionInfo = false,
 }: RequestsSectionProps) {
+  const pendingCount = courseRequests.filter(
+    (request) => request.status === SwapRequestStatus.PENDING,
+  ).length;
+
   return (
     <section className="grid gap-4">
       <FilterTabs
@@ -38,6 +50,27 @@ export function RequestsSection({
           value: tab.value,
         }))}
       />
+      {onApproveAllPending && onRejectAllPending ? (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            disabled={pendingCount === 0 || Boolean(actionId)}
+            onClick={() => void onApproveAllPending()}
+            size="sm"
+            variant="success"
+          >
+            Prihvati sve na čekanju ({pendingCount})
+          </Button>
+          <Button
+            disabled={pendingCount === 0 || Boolean(actionId)}
+            onClick={() => void onRejectAllPending()}
+            size="sm"
+            variant="danger"
+          >
+            Odbij sve na čekanju ({pendingCount})
+          </Button>
+        </div>
+      ) : null}
+
       {!courseRequests.length ? (
         <EmptyState
           description="Nema zahtjeva za odabrani filter."
@@ -46,7 +79,11 @@ export function RequestsSection({
       ) : (
         courseRequests.map((request) => (
           <div className="grid gap-0" key={request.id}>
-            <SwapRequestCard request={request} />
+            <SwapRequestCard
+              request={request}
+              showPriorityInfo={showPriorityInfo}
+              showSatisfactionInfo={showSatisfactionInfo}
+            />
             {request.status === SwapRequestStatus.PENDING ? (
               <div className="flex flex-wrap gap-2 rounded-b-lg border border-slate-200 border-t-0 bg-white px-4 py-3">
                 <Button

@@ -73,13 +73,6 @@ export function selectStudentsBySessionKind(
 ): StudentWithSelectedAssignment[] {
   return students
     .filter((student) => {
-      const assignment = student.assignments.find(
-        (entry) => entry.sessionKind === studentsSessionKind,
-      );
-      if (!assignment) {
-        return false;
-      }
-
       if (!studentSearch.trim()) {
         return true;
       }
@@ -111,7 +104,14 @@ export function buildStudentGroupOptionsByStudentId(
   for (const student of studentsForSelectedKind) {
     const assignment = student.selectedAssignment;
     if (!assignment) {
-      options.set(student.id, []);
+      options.set(
+        student.id,
+        groups.map((group) => ({
+          label: group.name,
+          value: group.id,
+          description: `${group.currentCount}/${group.capacity}`,
+        })),
+      );
       continue;
     }
 

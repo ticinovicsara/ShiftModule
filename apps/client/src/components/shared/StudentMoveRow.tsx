@@ -28,7 +28,7 @@ export function StudentMoveRow({
   const hasChanged = effectiveSelectedGroupId !== currentGroupId;
 
   return (
-    <article className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft md:grid-cols-[1.4fr_1fr_auto] md:items-end">
+    <article className="grid  gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] md:items-center">
       <div className="grid gap-1">
         <p className="text-sm font-semibold text-slate-900">{studentName}</p>
         <p className="text-xs text-slate-500">{studentEmail}</p>

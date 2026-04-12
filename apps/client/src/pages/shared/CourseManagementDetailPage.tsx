@@ -2,9 +2,12 @@ import {
   CourseManagementRequestTab,
   CourseManagementTab,
   SessionKind,
+  SwapRequestStatus,
+  type User,
   UserRole,
 } from "@repo/types";
 import { useCallback, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { adminApi, professorApi } from "../../api";
 import {
   GroupsSection,
@@ -64,6 +67,12 @@ export function CourseManagementDetailPage({
     Record<string, string>
   >({});
   const [studentSearch, setStudentSearch] = useState<string>("");
+  const [selectedStudentIdForEnroll, setSelectedStudentIdForEnroll] =
+    useState<string>("");
+  const [importJson, setImportJson] = useState<string>("");
+  const [enrollingWithoutGroup, setEnrollingWithoutGroup] = useState(false);
+  const [importingStudents, setImportingStudents] = useState(false);
+  const [autoAssigningUngrouped, setAutoAssigningUngrouped] = useState(false);
 
   const fetchCourseDetail = useCallback(
     () =>
@@ -80,10 +89,22 @@ export function CourseManagementDetailPage({
     refetch: refetchDetail,
   } = useFetch<CourseDetailPayload>(fetchCourseDetail);
 
+  const { data: allStudents } = useFetch<User[]>(
+    useCallback(
+      () =>
+        role === UserRole.ADMIN
+          ? adminApi.users.getStudents()
+          : Promise.resolve([]),
+      [role],
+    ),
+  );
+
   const {
     data: requests,
     approve,
     reject,
+    approveAll,
+    rejectAll,
     refetch: refetchRequests,
   } = useSwapRequests();
 
@@ -142,16 +163,211 @@ export function CourseManagementDetailPage({
     [requests, courseId, activeRequestTab],
   );
 
+  const allPendingCourseRequestIds = useMemo(
+    () =>
+      filterCourseRequests(requests, courseId, CourseManagementRequestTab.ALL)
+        .filter((request) => request.status === SwapRequestStatus.PENDING)
+        .map((request) => request.id),
+    [requests, courseId],
+  );
+
+  const showBulkResultToast = useCallback(
+    (actionLabel: string, processed: number, skipped: number) => {
+      if (skipped > 0) {
+        toast.success(
+          `${actionLabel} ${processed} zahtjeva, preskočeno ${skipped} (već obrađeno u paralelnom toku).`,
+        );
+        return;
+      }
+
+      toast.success(`${actionLabel} ${processed} zahtjeva.`);
+    },
+    [],
+  );
+
   const studentsForSelectedKind = useMemo(
     () =>
       selectStudentsBySessionKind(students, studentsSessionKind, studentSearch),
     [students, studentsSessionKind, studentSearch],
   );
 
-  const studentGroupOptionsByStudentId = useMemo(
-    () => buildStudentGroupOptionsByStudentId(groups, studentsForSelectedKind),
-    [groups, studentsForSelectedKind],
+  const groupsForStudentsKind = useMemo(
+    () => groupsByKind[studentsSessionKind] ?? [],
+    [groupsByKind, studentsSessionKind],
   );
+
+  const studentGroupOptionsByStudentId = useMemo(
+    () =>
+      buildStudentGroupOptionsByStudentId(
+        groupsForStudentsKind,
+        studentsForSelectedKind,
+      ),
+    [groupsForStudentsKind, studentsForSelectedKind],
+  );
+
+  const studentOptionsForEnroll = useMemo(() => {
+    if (role !== UserRole.ADMIN) {
+      return [];
+    }
+
+    const enrolledStudentIds = new Set(students.map((student) => student.id));
+
+    return (allStudents ?? [])
+      .filter((student) => !enrolledStudentIds.has(student.id))
+      .map((student) => ({
+        label: `${student.firstName} ${student.lastName}`,
+        value: student.id,
+        description: student.email,
+      }));
+  }, [allStudents, role, students]);
+
+  const handleEnrollWithoutGroup = useCallback(async () => {
+    if (role !== UserRole.ADMIN || !selectedStudentIdForEnroll) {
+      return;
+    }
+
+    setEnrollingWithoutGroup(true);
+    try {
+      const result = await adminApi.studentManagement.enrollWithoutGroup(
+        courseId,
+        selectedStudentIdForEnroll,
+      );
+
+      toast.success(
+        result.alreadyEnrolled
+          ? "Student je već upisan na kolegij."
+          : "Student je upisan bez grupe.",
+      );
+
+      setSelectedStudentIdForEnroll("");
+      await refetchDetail();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Upis studenta nije uspio.",
+      );
+    } finally {
+      setEnrollingWithoutGroup(false);
+    }
+  }, [courseId, refetchDetail, role, selectedStudentIdForEnroll]);
+
+  const handleImportStudents = useCallback(async () => {
+    if (role !== UserRole.ADMIN || !importJson.trim()) {
+      return;
+    }
+
+    setImportingStudents(true);
+    try {
+      let parsedPayload: unknown;
+      try {
+        parsedPayload = JSON.parse(importJson);
+      } catch {
+        toast.error("JSON format nije ispravan.");
+        return;
+      }
+
+      if (typeof parsedPayload !== "object" || parsedPayload === null) {
+        toast.error("JSON mora biti objekt ili polje.");
+        return;
+      }
+
+      const result =
+        await adminApi.studentManagement.importExistingStudentsToCourse(
+          courseId,
+          parsedPayload as Record<string, unknown> | unknown[],
+        );
+
+      toast.success(
+        `Import završen: upisano ${result.enrolledCount}, već upisano ${result.alreadyEnrolledCount}, nije pronađeno ${result.notFoundCount}.`,
+      );
+
+      await refetchDetail();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Import studenata nije uspio.",
+      );
+    } finally {
+      setImportingStudents(false);
+    }
+  }, [courseId, importJson, refetchDetail, role]);
+
+  const handleAutoAssignUngrouped = useCallback(async () => {
+    if (role !== UserRole.ADMIN && role !== UserRole.PROFESSOR) {
+      return;
+    }
+
+    setAutoAssigningUngrouped(true);
+    try {
+      const result = await adminApi.studentManagement.autoAssignUngrouped(
+        courseId,
+        studentsSessionKind,
+      );
+
+      toast.success(
+        `Automatska raspodjela završena: ${result.createdAssignments} novih dodjela, ${result.unresolved} neriješenih.`,
+      );
+
+      await refetchDetail();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Automatska raspodjela nije uspjela.",
+      );
+    } finally {
+      setAutoAssigningUngrouped(false);
+    }
+  }, [courseId, refetchDetail, role, studentsSessionKind]);
+
+  const handleApproveAllPending = useCallback(async () => {
+    if (!allPendingCourseRequestIds.length) {
+      toast.error("Nema zahtjeva na čekanju.");
+      return;
+    }
+
+    try {
+      const result = await approveAll(allPendingCourseRequestIds);
+      await refetchRequests();
+      showBulkResultToast("Odobreno", result.approved, result.skipped);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Masovno odobravanje nije uspjelo.",
+      );
+    }
+  }, [
+    allPendingCourseRequestIds,
+    approveAll,
+    refetchRequests,
+    showBulkResultToast,
+  ]);
+
+  const handleRejectAllPending = useCallback(async () => {
+    if (!allPendingCourseRequestIds.length) {
+      toast.error("Nema zahtjeva na čekanju.");
+      return;
+    }
+
+    try {
+      const result = await rejectAll({
+        ids: allPendingCourseRequestIds,
+        dto: { reason: "Odbijeno" },
+      });
+      await refetchRequests();
+      showBulkResultToast("Odbijeno", result.rejected, result.skipped);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Masovno odbijanje nije uspjelo.",
+      );
+    }
+  }, [
+    allPendingCourseRequestIds,
+    refetchRequests,
+    rejectAll,
+    showBulkResultToast,
+  ]);
 
   const groupsForCapacityKind =
     groupsSessionKind === SessionKind.LAB ? labGroups : exerciseGroups;
@@ -211,6 +427,29 @@ export function CourseManagementDetailPage({
       ) : null}
       {activeTab === CourseManagementTab.STUDENTS ? (
         <StudentsSection
+          adminControls={
+            role === UserRole.ADMIN
+              ? {
+                  selectedStudentId: selectedStudentIdForEnroll,
+                  setSelectedStudentId: setSelectedStudentIdForEnroll,
+                  studentOptions: studentOptionsForEnroll,
+                  onEnrollWithoutGroup: handleEnrollWithoutGroup,
+                  enrolling: enrollingWithoutGroup,
+                  importJson,
+                  setImportJson,
+                  onImportStudents: handleImportStudents,
+                  importing: importingStudents,
+                }
+              : undefined
+          }
+          autoAssignControls={
+            role === UserRole.ADMIN || role === UserRole.PROFESSOR
+              ? {
+                  onAutoAssign: handleAutoAssignUngrouped,
+                  autoAssigning: autoAssigningUngrouped,
+                }
+              : undefined
+          }
           movingStudentId={movingStudentId}
           onGroupChange={(studentId, value) =>
             setSelectedGroupByStudent((current) => ({
@@ -222,6 +461,7 @@ export function CourseManagementDetailPage({
           selectedGroupByStudent={selectedGroupByStudent}
           setStudentSearch={setStudentSearch}
           setStudentsSessionKind={setStudentsSessionKind}
+          groupsForSelectedKind={groupsForStudentsKind}
           studentGroupOptionsByStudentId={studentGroupOptionsByStudentId}
           studentSearch={studentSearch}
           studentsForSelectedKind={studentsForSelectedKind}
@@ -235,6 +475,10 @@ export function CourseManagementDetailPage({
           courseRequests={courseRequests}
           onApprove={handleApprove}
           onReject={handleReject}
+          onApproveAllPending={handleApproveAllPending}
+          onRejectAllPending={handleRejectAllPending}
+          showPriorityInfo={role === UserRole.PROFESSOR}
+          showSatisfactionInfo
           setActiveRequestTab={setActiveRequestTab}
         />
       ) : null}

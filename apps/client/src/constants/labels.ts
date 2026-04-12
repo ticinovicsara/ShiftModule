@@ -48,7 +48,6 @@ export const LABELS = {
   pages: {
     adminDashboard: "Admin dashboard",
     adminStudents: "Studenti",
-    adminImport: "Uvoz studenata",
     adminCourses: "Predmeti",
     professorCourses: "Moji kolegiji",
     professorRequests: "Zahtjevi za zamjenu",
@@ -65,5 +64,6 @@ export const LABELS = {
     full: "Puno",
     warning: "Skoro puno",
     available: "Dostupno",
+    manual: "Ručno",
   },
 } as const;

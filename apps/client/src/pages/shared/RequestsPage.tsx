@@ -45,7 +45,16 @@ export function RequestsPage({
   tabs = defaultTabs,
 }: RequestsPageProps) {
   const auth = useContext(AuthContext);
-  const { data, loading, error, approve, reject, refetch } = useSwapRequests();
+  const {
+    data,
+    loading,
+    error,
+    approve,
+    reject,
+    approveAll,
+    rejectAll,
+    refetch,
+  } = useSwapRequests();
   const { data: courses } = useCourses();
   const [activeTab, setActiveTab] = useState("all");
   const [actionId, setActionId] = useState<string | null>(null);
@@ -65,6 +74,25 @@ export function RequestsPage({
       courses: courses ?? undefined,
     });
 
+  const pendingRequestIds = cardRequests
+    .filter((request) => request.status === SwapRequestStatus.PENDING)
+    .map((request) => request.id);
+
+  const showBulkResultToast = (
+    actionLabel: string,
+    processed: number,
+    skipped: number,
+  ) => {
+    if (skipped > 0) {
+      toast.success(
+        `${actionLabel} ${processed} zahtjeva, preskočeno ${skipped} (već obrađeno u paralelnom toku).`,
+      );
+      return;
+    }
+
+    toast.success(`${actionLabel} ${processed} zahtjeva.`);
+  };
+
   const handleApprove = async (requestId: string) => {
     setActionId(requestId);
     try {
@@ -72,8 +100,11 @@ export function RequestsPage({
       await refetch();
       toast.success("Zahtjev je odobren.");
     } catch (error) {
+      await refetch();
       toast.error(
-        error instanceof Error ? error.message : "Odobravanje nije uspjelo.",
+        error instanceof Error
+          ? `${error.message} Zahtjev je osvježen.`
+          : "Odobravanje nije uspjelo. Zahtjev je osvježen.",
       );
     } finally {
       setActionId(null);
@@ -87,8 +118,56 @@ export function RequestsPage({
       await refetch();
       toast.success("Zahtjev je odbijen.");
     } catch (error) {
+      await refetch();
       toast.error(
-        error instanceof Error ? error.message : "Odbijanje nije uspjelo.",
+        error instanceof Error ? `${error.message}` : "Odbijanje nije uspjelo.",
+      );
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleApproveAll = async () => {
+    if (!pendingRequestIds.length) {
+      toast.error("Nema zahtjeva na čekanju.");
+      return;
+    }
+
+    setActionId("bulk-approve");
+    try {
+      const result = await approveAll(pendingRequestIds);
+      await refetch();
+      showBulkResultToast("Odobreno", result.approved, result.skipped);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Masovno odobravanje nije uspjelo.",
+      );
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleRejectAll = async () => {
+    if (!pendingRequestIds.length) {
+      toast.error("Nema zahtjeva na čekanju.");
+      return;
+    }
+
+    setActionId("bulk-reject");
+    try {
+      const result = await rejectAll({
+        ids: pendingRequestIds,
+        dto: { reason: resolvedRejectReason },
+      });
+      await refetch();
+      showBulkResultToast("Odbijeno", result.rejected, result.skipped);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Masovno odbijanje nije uspjelo.",
       );
     } finally {
       setActionId(null);
@@ -139,6 +218,27 @@ export function RequestsPage({
   return (
     <section className="grid gap-4">
       <FilterTabs activeValue={activeTab} onChange={setActiveTab} tabs={tabs} />
+      {auth?.role &&
+      (auth.role === UserRole.ADMIN || auth.role === UserRole.PROFESSOR) ? (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            disabled={!pendingRequestIds.length || Boolean(actionId)}
+            onClick={handleApproveAll}
+            size="sm"
+            variant="success"
+          >
+            Prihvati sve na čekanju ({pendingRequestIds.length})
+          </Button>
+          <Button
+            disabled={!pendingRequestIds.length || Boolean(actionId)}
+            onClick={handleRejectAll}
+            size="sm"
+            variant="danger"
+          >
+            Odbij sve na čekanju ({pendingRequestIds.length})
+          </Button>
+        </div>
+      ) : null}
       {!cardRequests.length ? (
         <EmptyState
           description="Nema zahtjeva za odabrani filter."
@@ -147,7 +247,10 @@ export function RequestsPage({
       ) : (
         cardRequests.map((request) => (
           <div className="grid gap-0" key={request.id}>
-            <SwapRequestCard request={request} />
+            <SwapRequestCard
+              request={request}
+              showProfessorInfo={auth?.role === UserRole.ADMIN}
+            />
             {request.status === SwapRequestStatus.PENDING ? (
               <div className="flex flex-wrap gap-2 p-2">
                 <Button
