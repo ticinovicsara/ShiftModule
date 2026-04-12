@@ -1,12 +1,13 @@
-import { SessionKind } from "@repo/types";
+import { SessionKind, SwapRequestStatus } from "@repo/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useFetch } from "../../hooks/useFetch";
 import { studentApi } from "../../api";
 import { ROUTE_PATHS } from "../../constants";
 import { Button } from "../../components/ui/Button";
 import { CapacityBar } from "../../components/shared/CapacityBar";
 import { LABELS } from "../../constants/labels";
+import { useSwapRequests } from "../../hooks";
 
 function formatGroupSchedule(group: {
   schedule?: { day: string; time: string; room: string };
@@ -17,10 +18,22 @@ function formatGroupSchedule(group: {
 
 export function StudentSwapStep1Page() {
   const navigate = useNavigate();
+  const location = useLocation();
   const params = useParams<{ id: string }>();
   const [selectedSessionTypeId, setSelectedSessionTypeId] =
     useState<string>("");
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
+  const { data: requests } = useSwapRequests();
+
+  const state = location.state as {
+    editRequestId?: string;
+    selectedSessionTypeId?: string;
+    selectedGroupId?: string;
+    reason?: string;
+    partnerEmail?: string;
+  } | null;
+
+  const editRequestId = state?.editRequestId;
 
   const fetchDetail = useCallback(() => {
     if (!params.id) throw new Error("Course id is missing");
@@ -28,6 +41,16 @@ export function StudentSwapStep1Page() {
   }, [params.id]);
 
   const { data, loading, error } = useFetch(fetchDetail);
+
+  useEffect(() => {
+    if (state?.selectedSessionTypeId) {
+      setSelectedSessionTypeId(state.selectedSessionTypeId);
+    }
+
+    if (state?.selectedGroupId) {
+      setSelectedGroupId(state.selectedGroupId);
+    }
+  }, [state?.selectedGroupId, state?.selectedSessionTypeId]);
 
   const sessionTypes = data?.sessionTypes ?? [];
   const currentGroups = data?.currentGroups ?? [];
@@ -79,10 +102,24 @@ export function StudentSwapStep1Page() {
     if (first?.sessionTypeId) setSelectedSessionTypeId(first.sessionTypeId);
   }, [optionStates, selectedSessionTypeId]);
 
-  // Reset group selection when session type changes
+  // Reset selection only when selected group is not valid for the chosen session type.
   useEffect(() => {
-    setSelectedGroupId("");
-  }, [selectedSessionTypeId]);
+    setSelectedGroupId((current) => {
+      if (!current || !selectedSessionTypeId) {
+        return current;
+      }
+
+      const selectedGroupSessionTypeId = data?.groups?.find(
+        (group) => group.id === current,
+      )?.sessionTypeId;
+
+      if (selectedGroupSessionTypeId === selectedSessionTypeId) {
+        return current;
+      }
+
+      return "";
+    });
+  }, [data?.groups, selectedSessionTypeId]);
 
   const availableGroups = useMemo(
     () =>
@@ -102,10 +139,33 @@ export function StudentSwapStep1Page() {
   const selectedGroup =
     availableGroups.find((g) => g.id === selectedGroupId) ?? null;
 
+  const hasOtherActiveRequest = useMemo(
+    () =>
+      (requests ?? []).some(
+        (request) =>
+          request.courseId === params.id &&
+          request.id !== editRequestId &&
+          (request.status === SwapRequestStatus.PENDING ||
+            request.status === SwapRequestStatus.WAITING_FOR_MATCH),
+      ),
+    [editRequestId, params.id, requests],
+  );
+
   const handleNext = () => {
     if (!selectedSessionTypeId || !selectedGroupId || !params.id) return;
+
+    if (hasOtherActiveRequest) {
+      return;
+    }
+
     navigate(ROUTE_PATHS.student.swapStep2(params.id), {
-      state: { selectedSessionTypeId, selectedGroupId },
+      state: {
+        editRequestId,
+        selectedSessionTypeId,
+        selectedGroupId,
+        reason: state?.reason,
+        partnerEmail: state?.partnerEmail,
+      },
     });
   };
 
@@ -122,6 +182,41 @@ export function StudentSwapStep1Page() {
       <div className="flex items-center justify-center p-12">
         <p className="text-sm text-red-600">{LABELS.common.notFound}</p>
       </div>
+    );
+  }
+
+  if (hasOtherActiveRequest && !editRequestId) {
+    return (
+      <section className="mx-auto max-w-2xl grid gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">
+            Zamjena grupe
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">Korak 1 od 2</p>
+        </div>
+        <article className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-red-900">
+            Zahtjev je već poslan i još nije riješen. Ne možete poslati novi dok
+            aktivni zahtjev ne bude riješen ili obrisan.
+          </p>
+        </article>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate(ROUTE_PATHS.student.notifications)}
+          >
+            Otvori obavijesti
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() =>
+              navigate(ROUTE_PATHS.student.courseDetail(params.id!))
+            }
+          >
+            Natrag na kolegij
+          </Button>
+        </div>
+      </section>
     );
   }
 

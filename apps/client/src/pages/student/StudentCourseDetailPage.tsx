@@ -34,6 +34,16 @@ export function StudentCourseDetailPage() {
     [requests, params.id],
   );
 
+  const hasActiveRequest = useMemo(
+    () =>
+      courseRequests.some(
+        (request) =>
+          request.status === SwapRequestStatus.PENDING ||
+          request.status === SwapRequestStatus.WAITING_FOR_MATCH,
+      ),
+    [courseRequests],
+  );
+
   const { cardRequests, usersLoading } = useRequestDisplayData({
     activeTab: "all",
     requests: courseRequests,
@@ -96,14 +106,23 @@ export function StudentCourseDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
+            disabled={hasActiveRequest}
             onClick={() =>
               navigate(ROUTE_PATHS.student.swapStep1(data.course!.id))
             }
             size="sm"
           >
-            Zatraži zamjenu grupe
+            {hasActiveRequest
+              ? "Zahtjev je već poslan"
+              : "Zatraži zamjenu grupe"}
           </Button>
         </div>
+        {hasActiveRequest ? (
+          <p className="text-xs text-amber-700">
+            Ne možete poslati novi zahtjev dok se postojeći ne riješi ili ne
+            obriše.
+          </p>
+        ) : null}
       </div>
 
       <div className="grid gap-3">

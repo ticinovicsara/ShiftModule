@@ -1,10 +1,12 @@
-import { useCallback } from "react";
+import { SwapRequestStatus, SwapRequestType } from "@repo/types";
+import { useCallback, useEffect, useMemo } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { Button, Input } from "../../components/ui";
+import { Button } from "../../components/ui";
+import { StudentPartnerSearchInput } from "../../components/shared/StudentPartnerSearchInput";
 import { LABELS } from "../../constants/labels";
 import { ROUTE_PATHS } from "../../constants";
 import { useFetch } from "../../hooks/useFetch";
-import { studentApi } from "../../api";
+import { ApiError, studentApi } from "../../api";
 import { useSwapRequests } from "../../hooks";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -13,20 +15,48 @@ export function StudentSwapStep2Page() {
   const params = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { create } = useSwapRequests();
+  const { create, update, data: requests, refetch } = useSwapRequests();
 
   const [reason, setReason] = useState("");
   const [wantPartner, setWantPartner] = useState(false);
   const [partnerEmail, setPartnerEmail] = useState("");
+  const [partnerDisplayName, setPartnerDisplayName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const state = location.state as {
+    editRequestId?: string;
     selectedSessionTypeId?: string;
     selectedGroupId?: string;
+    reason?: string;
+    partnerEmail?: string;
   } | null;
 
+  const editRequestId = state?.editRequestId;
   const selectedSessionTypeId = state?.selectedSessionTypeId;
   const selectedGroupId = state?.selectedGroupId;
+
+  const hasOtherActiveRequest = useMemo(
+    () =>
+      (requests ?? []).some(
+        (request) =>
+          request.courseId === params.id &&
+          request.id !== editRequestId &&
+          (request.status === SwapRequestStatus.PENDING ||
+            request.status === SwapRequestStatus.WAITING_FOR_MATCH),
+      ),
+    [editRequestId, params.id, requests],
+  );
+
+  useEffect(() => {
+    if (state?.reason) {
+      setReason(state.reason);
+    }
+
+    if (state?.partnerEmail) {
+      setPartnerEmail(state.partnerEmail);
+      setWantPartner(true);
+    }
+  }, [state?.partnerEmail, state?.reason]);
 
   const fetchDetail = useCallback(() => {
     if (!params.id) throw new Error("Course id is missing");
@@ -66,6 +96,31 @@ export function StudentSwapStep2Page() {
   );
   const desiredGroup = data.groups.find((g) => g.id === selectedGroupId);
 
+  if (hasOtherActiveRequest && !editRequestId) {
+    return (
+      <section className="mx-auto max-w-2xl grid gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">
+            Zamjena grupe
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">Korak 2 od 2</p>
+        </div>
+        <article className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-amber-900">
+            Zahtjev je već poslan. Ne možete poslati novi dok aktivni zahtjev ne
+            bude riješen ili obrisan.
+          </p>
+        </article>
+        <Button
+          variant="outline"
+          onClick={() => navigate(ROUTE_PATHS.student.notifications)}
+        >
+          Otvori obavijesti
+        </Button>
+      </section>
+    );
+  }
+
   const handleSubmit = async () => {
     if (!params.id) return;
     if (!currentGroup) {
@@ -83,22 +138,41 @@ export function StudentSwapStep2Page() {
 
     setIsSubmitting(true);
     try {
-      await create({
-        courseId: params.id,
-        sessionTypeId: selectedSessionTypeId,
-        currentGroupId: currentGroup.id,
-        desiredGroupId: selectedGroupId,
-        reason,
-        partnerEmail: wantPartner ? partnerEmail.trim() : undefined,
-      });
-      toast.success("Zahtjev je uspješno poslan");
+      if (editRequestId) {
+        await update({
+          id: editRequestId,
+          dto: {
+            desiredGroupId: selectedGroupId,
+            reason,
+            partnerEmail: wantPartner ? partnerEmail.trim() : undefined,
+            requestType: wantPartner
+              ? SwapRequestType.PAIRED
+              : SwapRequestType.SOLO,
+          },
+        });
+        toast.success("Zahtjev je uspješno ažuriran");
+      } else {
+        await create({
+          courseId: params.id,
+          sessionTypeId: selectedSessionTypeId,
+          currentGroupId: currentGroup.id,
+          desiredGroupId: selectedGroupId,
+          reason,
+          partnerEmail: wantPartner ? partnerEmail.trim() : undefined,
+        });
+        toast.success("Zahtjev je uspješno poslan");
+      }
+
+      await refetch();
       navigate(ROUTE_PATHS.student.courses);
     } catch (submitError) {
-      toast.error(
-        submitError instanceof Error
-          ? submitError.message
-          : "Slanje nije uspjelo",
-      );
+      if (submitError instanceof ApiError && submitError.statusCode === 409) {
+        toast.error(
+          "Već imate aktivan zahtjev za ovaj tip vježbe. Obrišite postojeći zahtjev u Obavijestima pa pošaljite novi.",
+        );
+      } else {
+        toast.error("Slanje nije uspjelo");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -109,7 +183,7 @@ export function StudentSwapStep2Page() {
       <div>
         <h1 className="text-xl font-semibold text-slate-900">Zamjena grupe</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Korak 2 od 2 — Detalji zahtjeva
+          Korak 2 od 2 — {editRequestId ? "Uredi zahtjev" : "Detalji zahtjeva"}
         </p>
       </div>
 
@@ -164,14 +238,17 @@ export function StudentSwapStep2Page() {
           </label>
         </div>
 
-        {wantPartner && (
-          <Input
-            label="Email partnera *"
-            onChange={(e) => setPartnerEmail(e.target.value)}
-            placeholder="partner@fesb.hr"
-            type="email"
-            value={partnerEmail}
-            hint="Ako kolega/ica potvrdi, zamjena se provodi automatski"
+        {wantPartner && currentGroup && (
+          <StudentPartnerSearchInput
+            courseId={params.id!}
+            desiredGroupId={selectedGroupId}
+            sessionTypeId={selectedSessionTypeId}
+            value={partnerDisplayName}
+            onChange={setPartnerDisplayName}
+            onSelect={(email, displayName) => {
+              setPartnerEmail(email);
+              setPartnerDisplayName(displayName);
+            }}
           />
         )}
       </article>
@@ -193,7 +270,11 @@ export function StudentSwapStep2Page() {
             isSubmitting
           }
         >
-          {isSubmitting ? "Slanje..." : "Pošalji zahtjev"}
+          {isSubmitting
+            ? "Spremanje..."
+            : editRequestId
+              ? "Spremi izmjene"
+              : "Pošalji zahtjev"}
         </Button>
       </div>
     </section>
