@@ -2,23 +2,23 @@ import { Module } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { GroupController } from './group.controller';
 import {
-  MockGroupRepository,
-  MockStudentGroupRepository,
-} from '../repositories';
+  GroupRepositoryModule,
+  SessionTypeRepositoryModule,
+  StudentCourseRepositoryModule,
+  StudentGroupRepositoryModule,
+  SwapRequestRepositoryModule,
+} from '../shared/repositories';
 
 @Module({
-  controllers: [GroupController],
-  providers: [
-    GroupService,
-    {
-      provide: 'IGroupRepository',
-      useClass: MockGroupRepository,
-    },
-    {
-      provide: 'IStudentGroupRepository',
-      useClass: MockStudentGroupRepository,
-    },
+  imports: [
+    GroupRepositoryModule,
+    StudentGroupRepositoryModule,
+    SessionTypeRepositoryModule,
+    StudentCourseRepositoryModule,
+    SwapRequestRepositoryModule,
   ],
+  controllers: [GroupController],
+  providers: [GroupService],
   exports: [GroupService],
 })
 export class GroupModule {}
