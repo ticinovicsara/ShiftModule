@@ -10,6 +10,14 @@ import type { CreateSwapRequestDto } from "../types";
 import { client } from "./client";
 import { API_ENDPOINTS } from "../constants";
 
+type CourseStudent = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  currentGroupId?: string;
+};
+
 export const studentApi = {
   getCourses: () => client.get<Course[]>(API_ENDPOINTS.student.courses),
   getMyEnrollments: () =>
@@ -41,6 +49,11 @@ export const studentApi = {
       groups: Array<Group & { sessionKind: SessionKind }>;
       hasPendingRequest: boolean;
     }>(API_ENDPOINTS.student.courseById(id)),
+  getCourseStudents: (id: string, sessionTypeId?: string) =>
+    client.get<CourseStudent[]>(
+      API_ENDPOINTS.student.courseStudents(id),
+      sessionTypeId ? { sessionTypeId } : undefined,
+    ),
   getRequests: () => client.get<SwapRequest[]>(API_ENDPOINTS.student.requests),
 
   swapRequests: {

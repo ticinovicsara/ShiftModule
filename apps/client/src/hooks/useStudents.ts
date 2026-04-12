@@ -1,10 +1,9 @@
-import type { CreateUserDto, User } from "@repo/types";
+import type { User } from "@repo/types";
 import { UserRole } from "@repo/types";
 import { useCallback, useContext, useMemo } from "react";
 import { adminApi } from "../api";
 import { AuthContext } from "../context/AuthContext";
 import { useFetch } from "./useFetch";
-import { useMutation } from "./useMutation";
 
 export function useStudents() {
   const auth = useContext(AuthContext);
@@ -21,18 +20,13 @@ export function useStudents() {
   }, [auth.role]);
   const { data, loading, error, refetch } = useFetch<User[]>(fetchAll);
 
-  const importMutation = useMutation((rows: CreateUserDto[]) =>
-    adminApi.users.importMany(rows),
-  );
-
   return useMemo(
     () => ({
       data,
       loading,
       error,
       refetch,
-      importStudents: importMutation.execute,
     }),
-    [data, error, importMutation.execute, loading, refetch],
+    [data, error, loading, refetch],
   );
 }

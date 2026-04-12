@@ -7,7 +7,7 @@ import { ROUTE_PATHS } from "../constants";
 import type { ApiEnvelope } from "../types";
 
 const ACCESS_TOKEN_KEY = "shiftmodule.access_token";
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly details: unknown;
@@ -18,13 +18,6 @@ export class ApiError extends Error {
     this.statusCode = statusCode;
     this.details = details;
   }
-}
-
-function getApiBaseUrl() {
-  return (
-    (import.meta.env.VITE_API_URL as string | undefined) ??
-    "http://localhost:3000"
-  );
 }
 
 function parseApiError(error: unknown): ApiError {
@@ -54,7 +47,7 @@ class ApiClient {
 
   constructor() {
     this.instance = axios.create({
-      baseURL: getApiBaseUrl(),
+      baseURL: BASE_URL,
       headers: {
         "Content-Type": "application/json",
       },
@@ -67,11 +60,24 @@ class ApiClient {
         config.headers.Authorization = `Bearer ${token}`;
       }
 
+      console.info(
+        "[API REQUEST]",
+        (config.method ?? "GET").toUpperCase(),
+        `${config.baseURL ?? ""}${config.url ?? ""}`,
+      );
+
       return config;
     });
 
     this.instance.interceptors.response.use(
       (response) => {
+        console.info(
+          "[API RESPONSE]",
+          response.status,
+          (response.config.method ?? "GET").toUpperCase(),
+          `${response.config.baseURL ?? ""}${response.config.url ?? ""}`,
+        );
+
         const payload = response.data;
         if (isApiEnvelope<unknown>(payload)) {
           return payload.data;
@@ -123,7 +129,11 @@ class ApiClient {
   }
 
   async patch<TData>(url: string, body?: object): Promise<TData> {
-    return this.instance.patch<TData, TData>(url, body);
+    return this.instance.request<TData, TData>({
+      url,
+      method: "PATCH",
+      data: body,
+    });
   }
 
   async delete<TData>(url: string): Promise<TData> {

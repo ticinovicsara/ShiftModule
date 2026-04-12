@@ -14,6 +14,7 @@ export interface RequestCardDisplayModel extends SwapRequest {
   desiredGroupName?: string;
   student?: Pick<User, "id" | "firstName" | "lastName" | "email">;
   partner?: Pick<User, "id" | "firstName" | "lastName" | "email">;
+  professor?: Pick<User, "id" | "firstName" | "lastName" | "email">;
 }
 
 interface UseRequestDisplayDataParams {
@@ -29,16 +30,19 @@ export function useRequestDisplayData({
 }: UseRequestDisplayDataParams) {
   const userIds = useMemo(
     () => [
-      ...new Set(
-        (requests ?? []).flatMap(
+      ...new Set([
+        ...(requests ?? []).flatMap(
           (request) =>
             [request.studentId, request.partnerStudentId].filter(
               Boolean,
             ) as string[],
         ),
-      ),
+        ...((courses ?? [])
+          .map((course) => course.professorId)
+          .filter(Boolean) as string[]),
+      ]),
     ],
-    [requests],
+    [courses, requests],
   );
 
   const {
@@ -106,6 +110,10 @@ export function useRequestDisplayData({
         partner: request.partnerStudentId
           ? userMap.get(request.partnerStudentId)
           : undefined,
+        professor: (() => {
+          const professorId = courseMap.get(request.courseId)?.professorId;
+          return professorId ? userMap.get(professorId) : undefined;
+        })(),
       })),
     [courseMap, filteredRequests, userMap],
   );

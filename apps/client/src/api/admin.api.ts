@@ -1,18 +1,24 @@
-import type { Course, Group, SessionType, StudyMajor, User } from "@repo/types";
+import type {
+  Course,
+  Group,
+  SessionKind,
+  SessionType,
+  StudyMajor,
+  User,
+} from "@repo/types";
+import { UserRole } from "@repo/types";
 import type {
   AssignProfessorDto,
   CreateCourseDto,
   CreateGroupDto,
   CreateSessionTypeDto,
   CreateStudyMajorDto,
-  CreateUserDto,
   ReportIssueDto,
   UpdateCourseDto,
   UpdateGroupCapacityDto,
   UpdateGroupDto,
   UpdateSessionTypeDto,
   UpdateStudyMajorDto,
-  UpdateUserDto,
 } from "../types";
 import { client } from "./client";
 import { API_ENDPOINTS } from "../constants";
@@ -24,18 +30,13 @@ interface ReportIssueResponse {
 export const adminApi = {
   users: {
     getAll: () => client.get<User[]>(API_ENDPOINTS.admin.users),
-    getStudents: () => client.get<User[]>(API_ENDPOINTS.admin.usersStudents),
+    getByRole: (role: UserRole) =>
+      client.get<User[]>(API_ENDPOINTS.admin.users, { role }),
+    getStudents: () =>
+      client.get<User[]>(API_ENDPOINTS.admin.usersByRole(UserRole.STUDENT)),
     getProfessors: () =>
-      client.get<User[]>(API_ENDPOINTS.admin.usersProfessors),
+      client.get<User[]>(API_ENDPOINTS.admin.usersByRole(UserRole.PROFESSOR)),
     getById: (id: string) => client.get<User>(API_ENDPOINTS.admin.userById(id)),
-    create: (dto: CreateUserDto) =>
-      client.post<User>(API_ENDPOINTS.admin.users, dto),
-    importMany: (rows: CreateUserDto[]) =>
-      client.post<User[]>(API_ENDPOINTS.admin.usersImport, rows),
-    update: (id: string, dto: UpdateUserDto) =>
-      client.patch<User>(API_ENDPOINTS.admin.userById(id), dto),
-    remove: (id: string) =>
-      client.delete<User>(API_ENDPOINTS.admin.userById(id)),
   },
 
   studyMajors: {
@@ -120,5 +121,44 @@ export const adminApi = {
       client.patch<SessionType>(API_ENDPOINTS.admin.sessionTypeById(id), dto),
     remove: (id: string) =>
       client.delete<SessionType>(API_ENDPOINTS.admin.sessionTypeById(id)),
+  },
+
+  studentManagement: {
+    enrollWithoutGroup: (courseId: string, studentId: string) =>
+      client.post<{
+        alreadyEnrolled: boolean;
+        enrollmentId: string;
+        studentId: string;
+        courseId: string;
+      }>(API_ENDPOINTS.admin.enrollStudentWithoutGroup(courseId, studentId)),
+    autoAssignUngrouped: (courseId: string, sessionKind?: SessionKind) =>
+      client.post<{
+        courseId: string;
+        sessionKind: SessionKind | null;
+        createdAssignments: number;
+        skippedExisting: number;
+        unresolved: number;
+      }>(
+        API_ENDPOINTS.admin.autoAssignUngroupedStudents(courseId),
+        {},
+        sessionKind ? { params: { sessionKind } } : undefined,
+      ),
+    importExistingStudentsToCourse: (
+      courseId: string,
+      payload: Record<string, unknown> | unknown[],
+    ) =>
+      client.post<{
+        courseId: string;
+        processed: number;
+        enrolledCount: number;
+        alreadyEnrolledCount: number;
+        notFoundCount: number;
+        notStudentCount: number;
+        results: Array<{
+          email?: string;
+          status: string;
+          studentId?: string;
+        }>;
+      }>(API_ENDPOINTS.admin.importStudentsToCourse(courseId), payload),
   },
 };
