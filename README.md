@@ -2,67 +2,56 @@
 
 University course group swap management system prototype for Moodle integration.
 
+## Overview
+
+ShiftModule is a pnpm monorepo with:
+
+- `apps/server`: NestJS API with in-memory mock repositories and Swagger docs
+- `apps/client`: React 19 + Vite frontend
+- `packages/types`: shared enums, DTOs, and domain models
+
+The current implementation supports:
+
+- student swap requests in solo and paired flows
+- professor approval, rejection, and manual request review
+- admin course, group, student, and study-major management
+- request notifications surfaced through backend console logging
+
 ## Quick Start
 
 ### Prerequisites
-- Node.js >= 18
-- pnpm >= 9
 
-### Installation
+- Node.js 18 or newer
+- pnpm 9 or newer
+
+### Install
 
 ```bash
 pnpm install
 ```
 
-### Running
+### Run
 
 ```bash
 # Start both apps
 pnpm dev
 
-# Or separately:
-# Terminal 1 - Backend (port 3000)
+# Or run them separately:
 cd apps/server && pnpm dev
-
-# Terminal 2 - Frontend (port 5173)
 cd apps/client && pnpm dev
 ```
 
 ### Access
+
 - Frontend: http://localhost:5173
 - API: http://localhost:3000
-- API Docs: http://localhost:3000/api/docs
-
-### Demo Users
-Any password works (mock auth):
-- `admin@fesb.hr` - Admin
-- `ivan.horvat@fesb.hr` - Professor
-- `student1@fesb.hr` - Student
-
-## Project Structure
-
-```
-apps/
-├── client/     # React frontend
-└── server/     # NestJS backend
-packages/
-├── types/      # Shared TypeScript types
-└── ...
-```
-
-## Features
-
-- Student group swap requests (SOLO/DIRECT/AUTO modes)
-- Professor approval workflow
-- Admin management
-- Email notifications (console)
+- API docs: http://localhost:3000/api/docs
 
 ## Configuration
 
-See `.env.example` for environment variables.
+Backend environment variables are documented in `apps/server/README.md`.
+Frontend environment variables are documented in `apps/client/README.md`.
 
-## Tech Stack
+## Verification
 
-- Backend: NestJS + JWT + Repository pattern
-- Frontend: React 19 + Vite + TanStack Query
-- Monorepo: Turborepo + pnpm
+See `apps/server/README.md` for backend test commands, including the swap-request concurrency e2e spec.

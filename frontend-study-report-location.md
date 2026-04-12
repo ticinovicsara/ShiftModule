@@ -1,14 +1,16 @@
 # Frontend Study Report Location
 
-Detailed report:
+The current frontend implementation docs live in:
 
-- `/memories/repo/frontend-study-report.md`
+- `apps/client/docs/frontend-study-report.md`
+- `apps/client/docs/frontend-architecture.md`
+- `apps/client/docs/frontend-api.md`
+- `apps/client/docs/frontend-components.md`
+- `apps/client/docs/frontend-pages.md`
+- `apps/client/docs/frontend-decisions.md`
 
-Repository memory summary:
+Historical reference material is kept in:
 
+- `apps/client/docs/study.md`
 - `/memories/repo/shiftmodule-frontend-context.md`
-
-Purpose:
-
-- `/memories/repo/frontend-study-report.md` keeps the long-form research with the rest of repository memory files.
-- `/memories/repo/shiftmodule-frontend-context.md` keeps a concise reusable summary for future sessions.
+- `/memories/repo/shiftmodule-backend-context.md`
