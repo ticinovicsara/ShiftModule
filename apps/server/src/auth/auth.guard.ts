@@ -15,7 +15,11 @@ export class AuthGuard implements CanActivate {
     const token = request.headers.authorization?.split(' ')[1];
     if (!token) throw new UnauthorizedException('No token provided');
     try {
-      const payload = jwt.verify(token, AppConfig.jwt.secret);
+      const secret = AppConfig.jwt.secret;
+      if (!secret) {
+        throw new UnauthorizedException('JWT secret is not configured');
+      }
+      const payload = jwt.verify(token, secret);
       request['user'] = payload;
       return true;
     } catch {

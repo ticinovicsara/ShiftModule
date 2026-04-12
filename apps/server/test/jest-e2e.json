@@ -3,6 +3,7 @@
   "roots": ["<rootDir>/test"],
   "moduleFileExtensions": ["js", "json", "ts"],
   "testEnvironment": "node",
+  "setupFiles": ["<rootDir>/test/setup-env.ts"],
   "testMatch": ["<rootDir>/test/**/*.e2e-spec.ts"],
   "modulePaths": ["<rootDir>"],
   "moduleNameMapper": {

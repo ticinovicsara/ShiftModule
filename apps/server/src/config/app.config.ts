@@ -1,11 +1,13 @@
+import './load-env';
+
 export const AppConfig = {
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   isDevelopment: process.env.NODE_ENV !== 'production',
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'secret',
-    expiresIn: process.env.JWT_EXPIRY || '7d',
+    secret: process.env.JWT_SECRET,
+    expiresIn: process.env.JWT_EXPIRY || '1d',
   },
 
   cors: {

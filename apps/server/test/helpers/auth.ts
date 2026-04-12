@@ -1,6 +1,7 @@
 import * as jwt from 'jsonwebtoken';
 import { UserRole } from '@repo/types';
 import { seedIds } from './seed-ids';
+import { AppConfig } from 'src/config/app.config';
 
 type RoleTokenData = {
   id: string;
@@ -44,7 +45,10 @@ export function signToken(
     role,
   };
 
-  const secret = process.env.JWT_SECRET ?? 'secret';
+  const secret = process.env.JWT_SECRET || AppConfig.jwt.secret;
+  if (!secret) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
   return jwt.sign(payload, secret, { expiresIn: '8h' });
 }
 

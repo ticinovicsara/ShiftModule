@@ -22,7 +22,12 @@ export class AuthService {
       role: user.role,
     };
 
-    const token = jwt.sign(payload, AppConfig.jwt.secret, {
+    const secret = AppConfig.jwt.secret;
+    if (!secret) {
+      throw new UnauthorizedException('JWT secret is not configured');
+    }
+
+    const token = jwt.sign(payload, secret, {
       expiresIn: AppConfig.jwt.expiresIn as any,
     });
 
