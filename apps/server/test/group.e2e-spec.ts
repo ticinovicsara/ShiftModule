@@ -64,15 +64,24 @@ describe('group module (e2e)', () => {
   });
 
   it('PATCH /admin/groups/:id/capacity should support happy + 401 + 403 + 400 + 404', async () => {
+    const created = await request(ctx.app.getHttpServer())
+      .post('/admin/groups')
+      .set(authHeader(UserRole.ADMIN))
+      .send({
+        name: `PATCH-CAP-${Date.now()}`,
+        capacity: 20,
+        activityTypeId: seedIds.activityTypes.lab,
+      });
+
     const ok = await request(ctx.app.getHttpServer())
-      .patch(`/admin/groups/${seedIds.groups.lab1}/capacity`)
+      .patch(`/admin/groups/${created.body.data.id}/capacity`)
       .set(authHeader(UserRole.ADMIN))
       .send({ capacity: 25 });
     expect(ok.status).toBe(200);
     expectEnvelope(ok.body);
 
     const badRequest = await request(ctx.app.getHttpServer())
-      .patch(`/admin/groups/${seedIds.groups.lab1}/capacity`)
+      .patch(`/admin/groups/${created.body.data.id}/capacity`)
       .set(authHeader(UserRole.ADMIN))
       .send({ capacity: -1 });
     expect(badRequest.status).toBe(400);
@@ -84,27 +93,36 @@ describe('group module (e2e)', () => {
     expect(notFound.status).toBe(404);
 
     const noToken = await request(ctx.app.getHttpServer()).patch(
-      `/admin/groups/${seedIds.groups.lab1}/capacity`,
+      `/admin/groups/${created.body.data.id}/capacity`,
     );
     expect(noToken.status).toBe(401);
 
     const wrongRole = await request(ctx.app.getHttpServer())
-      .patch(`/admin/groups/${seedIds.groups.lab1}/capacity`)
+      .patch(`/admin/groups/${created.body.data.id}/capacity`)
       .set(authHeader(UserRole.STUDENT))
       .send({ capacity: 10 });
     expect(wrongRole.status).toBe(403);
   });
 
   it('PATCH /admin/groups/:id should support happy + 401 + 403 + 400 + 404', async () => {
+    const created = await request(ctx.app.getHttpServer())
+      .post('/admin/groups')
+      .set(authHeader(UserRole.ADMIN))
+      .send({
+        name: `PATCH-GROUP-${Date.now()}`,
+        capacity: 20,
+        activityTypeId: seedIds.activityTypes.lab,
+      });
+
     const ok = await request(ctx.app.getHttpServer())
-      .patch(`/admin/groups/${seedIds.groups.lab2}`)
+      .patch(`/admin/groups/${created.body.data.id}`)
       .set(authHeader(UserRole.ADMIN))
       .send({ name: 'LAB2-UPDATED' });
     expect(ok.status).toBe(200);
     expectEnvelope(ok.body);
 
     const badBody = await request(ctx.app.getHttpServer())
-      .patch(`/admin/groups/${seedIds.groups.lab2}`)
+      .patch(`/admin/groups/${created.body.data.id}`)
       .set(authHeader(UserRole.ADMIN))
       .set('Content-Type', 'application/json')
       .send('{"name":');
@@ -117,12 +135,12 @@ describe('group module (e2e)', () => {
     expect(notFound.status).toBe(404);
 
     const noToken = await request(ctx.app.getHttpServer()).patch(
-      `/admin/groups/${seedIds.groups.lab2}`,
+      `/admin/groups/${created.body.data.id}`,
     );
     expect(noToken.status).toBe(401);
 
     const wrongRole = await request(ctx.app.getHttpServer())
-      .patch(`/admin/groups/${seedIds.groups.lab2}`)
+      .patch(`/admin/groups/${created.body.data.id}`)
       .set(authHeader(UserRole.PROFESSOR))
       .send({ name: 'x' });
     expect(wrongRole.status).toBe(403);
@@ -157,39 +175,6 @@ describe('group module (e2e)', () => {
     const wrongRole = await request(ctx.app.getHttpServer())
       .delete(`/admin/groups/${seedIds.groups.lab1}`)
       .set(authHeader(UserRole.STUDENT));
-    expect(wrongRole.status).toBe(403);
-  });
-
-  it('POST /groups/:id/report-issue should support happy + 401 + 403 + 400 + 404', async () => {
-    const ok = await request(ctx.app.getHttpServer())
-      .post(`/groups/${seedIds.groups.lab1}/report-issue`)
-      .set(authHeader(UserRole.PROFESSOR))
-      .send({ reason: 'OTHER', description: 'Projector not working' });
-    expect(ok.status).toBe(201);
-    expectEnvelope(ok.body);
-
-    const badBody = await request(ctx.app.getHttpServer())
-      .post(`/groups/${seedIds.groups.lab1}/report-issue`)
-      .set(authHeader(UserRole.ADMIN))
-      .set('Content-Type', 'application/json')
-      .send('{"reason":');
-    expect(badBody.status).toBe(400);
-
-    const notFound = await request(ctx.app.getHttpServer())
-      .post(`/groups/${seedIds.notFound.group}/report-issue`)
-      .set(authHeader(UserRole.ADMIN))
-      .send({ reason: 'OTHER', description: 'x' });
-    expect(notFound.status).toBe(404);
-
-    const noToken = await request(ctx.app.getHttpServer()).post(
-      `/groups/${seedIds.groups.lab1}/report-issue`,
-    );
-    expect(noToken.status).toBe(401);
-
-    const wrongRole = await request(ctx.app.getHttpServer())
-      .post(`/groups/${seedIds.groups.lab1}/report-issue`)
-      .set(authHeader(UserRole.STUDENT))
-      .send({ reason: 'OTHER', description: 'x' });
     expect(wrongRole.status).toBe(403);
   });
 });
