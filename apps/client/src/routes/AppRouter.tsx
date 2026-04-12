@@ -7,7 +7,6 @@ import {
   LoginPage,
   AdminDashboardPage,
   AdminStudentsPage,
-  AdminImportPage,
   AdminCoursesPage,
   AdminCourseDetailPage,
   ProfessorDashboardPage,
@@ -45,10 +44,7 @@ export function AppRouter() {
             element={<AdminStudentsPage />}
           />
           <Route path={ROUTE_PATHS.admin.requests} element={<RequestsPage />} />
-          <Route
-            path={ROUTE_PATHS.admin.studentsImport}
-            element={<AdminImportPage />}
-          />
+
           <Route
             path={ROUTE_PATHS.admin.courses}
             element={<ProfessorCoursesPage role="admin" />}

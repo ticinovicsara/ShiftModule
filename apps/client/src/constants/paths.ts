@@ -22,7 +22,6 @@ export const ROUTE_PATHS = {
     requests: "/admin/requests",
     settings: "/admin/settings",
     students: "/admin/students",
-    studentsImport: "/admin/students/import",
     courses: "/admin/courses",
     courseDetail: (id: string) => `/admin/courses/${id}`,
     groups: "/admin/groups",

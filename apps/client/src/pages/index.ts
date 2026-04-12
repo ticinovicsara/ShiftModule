@@ -1,7 +1,6 @@
 export * from "./admin/AdminCourseDetailPage";
 export * from "./admin/AdminCoursesPage";
 export * from "./admin/AdminDashboardPage";
-export * from "./admin/AdminImportPage";
 export * from "./admin/AdminStudentsPage";
 export * from "./auth/LoginPage";
 export * from "./professor/ProfessorAutoLogPage";
