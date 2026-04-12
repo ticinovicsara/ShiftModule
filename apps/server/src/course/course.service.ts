@@ -137,23 +137,29 @@ export class CourseService {
           (group) => group.id === currentStudentGroup?.groupId,
         );
 
-        const assignments = studentGroups.map((studentGroup) => {
-          const group = groupsWithActualCounts.find(
-            (entry) => entry.id === studentGroup.groupId,
-          );
-          if (!group) {
-            throw new NotFoundException(
-              `Group ${studentGroup.groupId} not found for student assignment`,
+        const assignments = studentGroups
+          .filter((studentGroup) =>
+            groupsWithActualCounts.some(
+              (group) => group.id === studentGroup.groupId,
+            ),
+          )
+          .map((studentGroup) => {
+            const group = groupsWithActualCounts.find(
+              (entry) => entry.id === studentGroup.groupId,
             );
-          }
+            if (!group) {
+              throw new NotFoundException(
+                `Group ${studentGroup.groupId} not found for student assignment`,
+              );
+            }
 
-          return {
-            sessionTypeId: group.sessionTypeId,
-            sessionKind: sessionTypeKindById.get(group.sessionTypeId),
-            groupId: group.id,
-            groupName: group.name,
-          };
-        });
+            return {
+              sessionTypeId: group.sessionTypeId,
+              sessionKind: sessionTypeKindById.get(group.sessionTypeId),
+              groupId: group.id,
+              groupName: group.name,
+            };
+          });
 
         return {
           id: enrollment.studentId,

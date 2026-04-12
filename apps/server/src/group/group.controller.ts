@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -15,9 +16,10 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { GroupService } from './group.service';
 import { UserRole } from '@repo/types';
-import type { CreateGroupDto } from './dto/create-group.dto';
+import { CreateGroupDto } from './dto/create-group.dto';
 import type { UpdateGroupDto } from './dto/update-group.dto';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
 
@@ -111,10 +113,25 @@ export class GroupController {
   @ApiOperation({ summary: 'Move student to another group' })
   @ApiResponse({ status: 201, description: 'Student moved' })
   async moveStudentToGroup(
+    @Req() request: Request,
     @Param('studentId') studentId: string,
     @Param('groupId') groupId: string,
   ) {
-    const data = await this.groupService.moveStudentToGroup(studentId, groupId);
+    const actor = (
+      request as Request & {
+        user?: {
+          id?: string;
+          role?: UserRole;
+          firstName?: string;
+          lastName?: string;
+        };
+      }
+    ).user;
+    const data = await this.groupService.moveStudentToGroup(
+      studentId,
+      groupId,
+      actor,
+    );
     return { data, error: null, message: data.message };
   }
 }

@@ -4,8 +4,17 @@ import {
   BadRequestException,
   Inject,
 } from '@nestjs/common';
+import {
+  StudentGroupStatus,
+  SwapRequestStatus,
+  SwapRequestType,
+  type UserRole,
+} from '@repo/types';
 import type { IGroupRepository } from '../repositories/interfaces/group.repository.interface';
+import type { ISessionTypeRepository } from '../repositories/interfaces/session-type.repository.interface';
+import type { IStudentCourseRepository } from '../repositories/interfaces/student-course.repository.interface';
 import type { IStudentGroupRepository } from '../repositories/interfaces/student-group.repository.interface';
+import type { ISwapRequestRepository } from '../repositories/interfaces/swap-request.repository.interface';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { ReportIssueDto } from './dto/report-issue.dto';
@@ -17,6 +26,12 @@ export class GroupService {
     private readonly groupRepo: IGroupRepository,
     @Inject('IStudentGroupRepository')
     private readonly studentGroupRepo: IStudentGroupRepository,
+    @Inject('ISessionTypeRepository')
+    private readonly sessionTypeRepo: ISessionTypeRepository,
+    @Inject('IStudentCourseRepository')
+    private readonly studentCourseRepo: IStudentCourseRepository,
+    @Inject('ISwapRequestRepository')
+    private readonly swapRequestRepo: ISwapRequestRepository,
   ) {}
 
   async findAll() {
@@ -78,15 +93,33 @@ export class GroupService {
   async moveStudentToGroup(
     studentId: string,
     newGroupId: string,
+    actor?: {
+      id?: string;
+      role?: UserRole;
+      firstName?: string;
+      lastName?: string;
+    },
   ): Promise<{ success: boolean; message: string }> {
     const targetGroup = await this.findById(newGroupId);
-
-    const studentGroups = await this.studentGroupRepo.findByStudent(studentId);
-    if (!studentGroups || studentGroups.length === 0) {
+    const targetSessionType = await this.sessionTypeRepo.findById(
+      targetGroup.sessionTypeId,
+    );
+    if (!targetSessionType) {
       throw new NotFoundException(
-        `Student ${studentId} is not assigned to any group`,
+        `Session type ${targetGroup.sessionTypeId} not found`,
       );
     }
+
+    const studentCourses =
+      await this.studentCourseRepo.findByStudent(studentId);
+    const isEnrolledInCourse = studentCourses.some(
+      (enrollment) => enrollment.courseId === targetSessionType.courseId,
+    );
+    if (!isEnrolledInCourse) {
+      throw new BadRequestException('Student is not enrolled in target course');
+    }
+
+    const studentGroups = await this.studentGroupRepo.findByStudent(studentId);
 
     const studentGroupWithSameSessionType = (
       await Promise.all(
@@ -95,9 +128,7 @@ export class GroupService {
             studentGroup.groupId,
           );
           if (!currentGroup) {
-            throw new NotFoundException(
-              `Group ${studentGroup.groupId} not found for student ${studentId}`,
-            );
+            return undefined;
           }
 
           return currentGroup.sessionTypeId === targetGroup.sessionTypeId
@@ -108,26 +139,65 @@ export class GroupService {
     ).find((entry): entry is NonNullable<typeof entry> => Boolean(entry));
 
     if (!studentGroupWithSameSessionType) {
-      throw new BadRequestException(
-        'Student is not assigned to a group of the selected session type',
-      );
+      const created = await this.studentGroupRepo.create({
+        studentId,
+        groupId: newGroupId,
+        status: StudentGroupStatus.ASSIGNED,
+      });
+
+      await this.incrementCount(newGroupId);
+
+      await this.swapRequestRepo.create({
+        studentId,
+        courseId: targetSessionType.courseId,
+        sessionTypeId: targetGroup.sessionTypeId,
+        currentGroupId: newGroupId,
+        desiredGroupId: newGroupId,
+        requestType: SwapRequestType.SOLO,
+        reason:
+          `Manual assignment by ${actor?.firstName ?? 'staff'} ${actor?.lastName ?? ''}`.trim(),
+        partnerConfirmed: true,
+        status: SwapRequestStatus.APPROVED,
+        satisfiedWish: undefined,
+        priorityScore: 0,
+      });
+
+      void created;
+      return {
+        success: true,
+        message: 'Student assigned to group successfully',
+      };
     }
 
     const studentGroup = studentGroupWithSameSessionType;
     const oldGroupId = studentGroup.groupId;
 
-    // If already in the target group, no-op
     if (oldGroupId === newGroupId) {
       return { success: true, message: 'Student is already in target group' };
     }
 
-    // Update the student's group assignment
     await this.studentGroupRepo.update(studentGroup.id, {
       groupId: newGroupId,
+      status: StudentGroupStatus.ASSIGNED,
     });
 
     await this.decrementCount(oldGroupId);
     await this.incrementCount(newGroupId);
+
+    await this.swapRequestRepo.create({
+      studentId,
+      courseId: targetSessionType.courseId,
+      sessionTypeId: targetGroup.sessionTypeId,
+      currentGroupId: oldGroupId,
+      desiredGroupId: newGroupId,
+      requestType: SwapRequestType.SOLO,
+      reason:
+        `Manual move by ${actor?.firstName ?? 'staff'} ${actor?.lastName ?? ''}`.trim(),
+      partnerConfirmed: true,
+      status: SwapRequestStatus.APPROVED,
+      satisfiedWish: undefined,
+      priorityScore: 0,
+    });
 
     return { success: true, message: 'Student moved successfully' };
   }
