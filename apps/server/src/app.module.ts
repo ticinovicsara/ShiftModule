@@ -1,17 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AdminModule } from './admin';
-import { AppService } from './app.service';
 import { AuthModule } from './auth';
 import { CourseModule } from './course';
 import { GroupModule } from './group';
 import { NotificationModule } from './notification';
-import { ProfessorModule } from './professor';
 import { SessionTypeModule } from './session-type';
 import { StudentModule } from './student';
 import { StudyMajorModule } from './study-major';
 import { SwapRequestModule } from './swap-request';
 import { UserModule } from './user';
-import { AppController } from './app.controller';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -25,10 +21,7 @@ import { HealthController } from './health.controller';
     StudentModule,
     SwapRequestModule,
     NotificationModule,
-    AdminModule,
-    ProfessorModule,
   ],
-  controllers: [AppController, HealthController],
-  providers: [AppService],
+  controllers: [HealthController],
 })
 export class AppModule {}
