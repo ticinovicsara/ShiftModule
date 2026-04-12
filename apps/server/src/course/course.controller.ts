@@ -18,7 +18,7 @@ import {
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { CourseService } from './course.service';
-import type { CreateCourseDto } from './dto/create-course.dto';
+import { CreateCourseDto } from './dto/create-course.dto';
 import type { UpdateCourseDto } from './dto/update-course.dto';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
 import { SwapMode, UserRole } from '@repo/types';

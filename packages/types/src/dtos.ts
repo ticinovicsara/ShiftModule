@@ -105,5 +105,6 @@ export interface RejectSwapRequestDto {
 
 export interface ProfessorRequestQuery {
   courseId?: string;
-  mode: SwapMode;
+  sessionTypeId?: string;
+  mode?: SwapMode;
 }

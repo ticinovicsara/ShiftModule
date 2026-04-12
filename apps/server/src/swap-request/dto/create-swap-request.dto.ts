@@ -1,30 +1,41 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsString, IsOptional, IsEmail, IsEnum } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { SwapRequestType } from '@repo/types';
 
 export class CreateSwapRequestDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  @IsUUID('4', { message: 'Invalid course ID format' })
-  courseId: string;
+  @IsString()
+  @IsNotEmpty({ message: 'Course ID is required' })
+  courseId!: string;
 
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174001' })
-  @IsUUID('4', { message: 'Invalid session type ID format' })
-  sessionTypeId: string;
+  @IsString()
+  @IsNotEmpty({ message: 'Session type ID is required' })
+  sessionTypeId!: string;
 
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174002' })
-  @IsUUID('4', { message: 'Invalid current group ID format' })
-  currentGroupId: string;
+  @IsString()
+  @IsNotEmpty({ message: 'Current group ID is required' })
+  currentGroupId!: string;
 
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174003' })
-  @IsUUID('4', { message: 'Invalid desired group ID format' })
-  desiredGroupId: string;
+  @IsString()
+  @IsNotEmpty({ message: 'Desired group ID is required' })
+  desiredGroupId!: string;
 
   @ApiProperty({
     example: '123e4567-e89b-12d3-a456-426614174004',
     required: false,
   })
   @IsOptional()
-  @IsUUID('4', { message: 'Invalid second choice group ID format' })
+  @IsString()
+  @IsNotEmpty({ message: 'Second choice group ID cannot be empty' })
   secondChoiceGroupId?: string;
 
   @ApiProperty({

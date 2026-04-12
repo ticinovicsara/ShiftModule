@@ -14,6 +14,7 @@ export interface User {
   firstName: string;
   lastName: string;
   role: UserRole;
+  gpa?: number;
 }
 
 export interface StudyMajor {
@@ -94,12 +95,13 @@ export interface SwapRequest {
     firstName: string;
     lastName: string;
     email: string;
+    gpa?: number;
   };
 }
 
 export interface SwapRequestWithUsers extends SwapRequest {
-  student?: Pick<User, "id" | "firstName" | "lastName" | "email">;
-  partner?: Pick<User, "id" | "firstName" | "lastName" | "email">;
+  student?: Pick<User, "id" | "firstName" | "lastName" | "email" | "gpa">;
+  partner?: Pick<User, "id" | "firstName" | "lastName" | "email" | "gpa">;
 }
 
 export interface ApiEnvelope<TData> {

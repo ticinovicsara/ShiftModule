@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
+  Patch,
   Body,
   Param,
   Query,
@@ -18,8 +20,11 @@ import {
 import type { Request } from 'express';
 import { SwapMode, UserRole } from '@repo/types';
 import { SwapRequestService } from './swap-request.service';
-import type { CreateSwapRequestDto } from './dto/create-swap-request.dto';
-import type { RejectSwapRequestDto } from './dto/reject-swap-request.dto';
+import { CreateSwapRequestDto } from './dto/create-swap-request.dto';
+import { RejectSwapRequestDto } from './dto/reject-swap-request.dto';
+import { SetSwapSatisfactionDto } from './dto/set-swap-satisfaction.dto';
+import { BulkSwapRequestActionDto } from './dto/bulk-swap-request-action.dto';
+import type { UpdateSwapRequestDto } from './dto/update-swap-request.dto';
 import { AuthGuard, RolesGuard, Roles } from '../auth';
 
 @Controller('swap-requests')
@@ -121,6 +126,116 @@ export class SwapRequestController {
     return { data, error: null, message: 'Partner declined' };
   }
 
+  @Post('student/requests/:id/satisfaction')
+  @Roles(UserRole.STUDENT)
+  @ApiOperation({ summary: 'Set satisfaction for resolved swap request' })
+  @ApiResponse({
+    status: 200,
+    description: 'Swap satisfaction response recorded',
+  })
+  async setSatisfaction(
+    @Req() request: Request,
+    @Param('id') requestId: string,
+    @Body() dto: SetSwapSatisfactionDto,
+  ) {
+    const studentId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
+    const data = await this.swapRequestService.setSatisfaction(
+      requestId,
+      studentId,
+      dto.accepted,
+    );
+    return { data, error: null, message: 'Satisfaction updated' };
+  }
+
+  @Delete('student/requests/:id')
+  @Roles(UserRole.STUDENT)
+  @ApiOperation({ summary: 'Cancel own swap request (student)' })
+  @ApiResponse({ status: 200, description: 'Swap request canceled' })
+  async cancelRequest(@Req() request: Request, @Param('id') requestId: string) {
+    const studentId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
+    const data = await this.swapRequestService.cancelRequest(
+      requestId,
+      studentId,
+    );
+    return { data, error: null, message: 'Request canceled' };
+  }
+
+  @Patch('student/requests/:id')
+  @Roles(UserRole.STUDENT)
+  @ApiOperation({ summary: 'Edit own swap request (student)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        desiredGroupId: { type: 'string', example: 'group-osnove-lab-2' },
+        secondChoiceGroupId: {
+          type: 'string',
+          example: 'group-osnove-lab-3',
+        },
+        reason: {
+          type: 'string',
+          example: 'Updated reason for swap request.',
+        },
+        partnerEmail: { type: 'string', example: 'student2@fesb.hr' },
+        requestType: { type: 'string', example: 'PAIRED' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Swap request updated' })
+  async updateRequest(
+    @Req() request: Request,
+    @Param('id') requestId: string,
+    @Body() dto: UpdateSwapRequestDto,
+  ) {
+    const studentId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
+    const data = await this.swapRequestService.updateRequest(
+      requestId,
+      studentId,
+      dto,
+    );
+    return { data, error: null, message: 'Request updated' };
+  }
+
+  @Post('student/requests/:id/update')
+  @Roles(UserRole.STUDENT)
+  @ApiOperation({ summary: 'Edit own swap request (student, POST alias)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        desiredGroupId: { type: 'string', example: 'group-osnove-lab-2' },
+        secondChoiceGroupId: {
+          type: 'string',
+          example: 'group-osnove-lab-3',
+        },
+        reason: {
+          type: 'string',
+          example: 'Updated reason for swap request.',
+        },
+        partnerEmail: { type: 'string', example: 'student2@fesb.hr' },
+        requestType: { type: 'string', example: 'PAIRED' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Swap request updated' })
+  async updateRequestPost(
+    @Req() request: Request,
+    @Param('id') requestId: string,
+    @Body() dto: UpdateSwapRequestDto,
+  ) {
+    const studentId = (request as Request & { user?: { id?: string } }).user
+      ?.id;
+    const data = await this.swapRequestService.updateRequest(
+      requestId,
+      studentId,
+      dto,
+    );
+    return { data, error: null, message: 'Request updated' };
+  }
+
   @Get('professor/requests')
   @Roles(UserRole.PROFESSOR)
   @ApiOperation({ summary: 'Get course swap requests (professor)' })
@@ -131,16 +246,48 @@ export class SwapRequestController {
   async getCourseRequests(
     @Req() request: Request,
     @Query('courseId') courseId?: string,
-    @Query('mode') mode: SwapMode = SwapMode.MANUAL,
+    @Query('sessionTypeId') sessionTypeId?: string,
+    @Query('mode') mode?: SwapMode,
   ) {
     const professorId = (request as Request & { user?: { id?: string } }).user
       ?.id;
-    const data = await this.swapRequestService.getCourseRequests(
+
+    if (!courseId || !sessionTypeId) {
+      if (mode) {
+        const data = await this.swapRequestService.getCourseRequests(
+          courseId,
+          mode,
+          professorId,
+        );
+        return { data, error: null, message: 'OK' };
+      }
+    }
+
+    const data = await this.swapRequestService.getPrioritizedRequests(
       courseId,
-      mode,
-      professorId,
+      sessionTypeId,
     );
     return { data, error: null, message: 'OK' };
+  }
+
+  @Post('requests/bulk/approve')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+  @ApiOperation({ summary: 'Approve all selected pending swap requests' })
+  @ApiResponse({ status: 200, description: 'Bulk approve completed' })
+  async bulkApprove(@Body() dto: BulkSwapRequestActionDto) {
+    const data = await this.swapRequestService.approveRequests(dto.ids);
+    return { data, error: null, message: 'Bulk approve completed' };
+  }
+
+  @Post('requests/bulk/reject')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSOR)
+  @ApiOperation({ summary: 'Reject all selected pending swap requests' })
+  @ApiResponse({ status: 200, description: 'Bulk reject completed' })
+  async bulkReject(@Body() dto: BulkSwapRequestActionDto) {
+    const data = await this.swapRequestService.rejectRequests(dto.ids, {
+      reason: dto.reason,
+    });
+    return { data, error: null, message: 'Bulk reject completed' };
   }
 
   @Post('requests/:id/approve')
